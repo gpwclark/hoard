@@ -40,11 +40,12 @@ means that any given NFD may or may not have certain data.
 		│   └── B
 		└── node_2 (nfd_2,hoard_2)
 			└── C
-```
-			* where node_1 and node_2 are connected intermediate nodes each 
-			running instances of NFD and hoard.
-			* where A, and B are data producers connected to node 1, and C 
-			is a data producer connected to node 2.
+		* where node_1 and node_2 are connected intermediate nodes each 
+		running instances of NFD and hoard.
+		* where A, and B are data producers connected to node 1, and C 
+		is a data producer connected to node 2.
+		```
+			
 	-	Let's say that A and B are communicating over a variety of prefixes
 	known to hoard, and C is currently interested in none of that data. The
 	instance of hoard on node 1 will cache all the data being created by A and 
