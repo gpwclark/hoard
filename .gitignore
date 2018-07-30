@@ -1,0 +1,10 @@
+.idea
+.project
+out
+Session.vim
+.classpath
+.settings
+bin
+.gradle
+hoard.log
+build
