@@ -1,6 +1,7 @@
-#hoard
+# hoard
+-	an ndn-based intermediary caching and pushing node
 
-#intent
+## intent
 -	Hoard is an ndn-based intermediate caching and pushing mechanism. Although
 NFD provides the ability to cache data, there is no guarantee that data will 
 be in the cache.  Furthermore, NFD only caches data that it forwards. This 
@@ -33,13 +34,13 @@ means that any given NFD may or may not have certain data.
 	trading partial consistency in favor of constant availability). The 
 	advantages to the underlying clients hoard is serving are readily apparent
 	in the case of network partitions. Given the following topology:
-		
+		```
 		├── node_1 (nfd_1,hoard_1)
 		│   ├── A
 		│   └── B
 		└── node_2 (nfd_2,hoard_2)
 			└── C
-
+```
 			* where node_1 and node_2 are connected intermediate nodes each 
 			running instances of NFD and hoard.
 			* where A, and B are data producers connected to node 1, and C 
