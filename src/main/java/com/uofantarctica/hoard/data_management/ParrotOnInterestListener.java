@@ -8,9 +8,9 @@ import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.network_management.InterestListener;
 
-public class FlatInterestListener extends InterestListener {
+public class ParrotOnInterestListener extends InterestListener {
 
-    public FlatInterestListener(com.uofantarctica.hoard.data_management.MemoryContentCache cache, Enqueue<NdnEvent> ndnEvents, com.uofantarctica.hoard.data_management.FlatDataHoarder hoarder) {
+    public ParrotOnInterestListener(com.uofantarctica.hoard.data_management.MemoryContentCache cache, Enqueue<NdnEvent> ndnEvents, com.uofantarctica.hoard.data_management.FlatDataHoarder hoarder) {
         super(cache, ndnEvents, hoarder);
     }
 

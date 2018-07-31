@@ -22,10 +22,29 @@ import java.util.Set;
 public class SyncDataHoarder extends DataHoarder {
 	private static final Logger log = LoggerFactory.getLogger(SyncDataHoarder.class);
 
+	private final MemoryContentCache cache;
 	public SyncDataHoarder(Enqueue<NdnEvent> ndnEvents,
 						   Enqueue<NdnTraffic> ndnTraffic,
-						   ExponentialInterestBackoff retryPolicy) {
+						   ExponentialInterestBackoff retryPolicy,
+	                       MemoryContentCache cache) {
 		super(ndnEvents, ndnTraffic, retryPolicy);
+		this.cache = cache;
+	}
+
+	public MemoryContentCache getCache() {
+		return cache;
+	}
+
+	public Enqueue<NdnEvent> getEnQNdnEvent() {
+		return ndnEvents;
+	}
+
+	public Enqueue<NdnTraffic> getEnQNdnTraffic() {
+		return ndnTraffic;
+	}
+
+	public ExponentialInterestBackoff getRetryPolicy() {
+		return retryPolicy;
 	}
 
 	@Override
@@ -36,38 +55,26 @@ public class SyncDataHoarder extends DataHoarder {
 
 
 	private void expressInterestsIfDataFromKnownSyncProtocol(Data data) {
-		List<NdnEvent> events = getInterestsIfDataFromKnownSyncProtocol(data);
-		for (NdnEvent event : events) {
-			ndnEvents.enQ(event);
-		}
-	}
-
-	private List<NdnEvent> getInterestsIfDataFromKnownSyncProtocol(Data data) {
-		List<NdnEvent> potentialEvents = new ArrayList<>();
 		try {
 			SyncStateProto.SyncStateMsg states = SyncStateProto.SyncStateMsg.parseFrom(data.getContent().getImmutableArray());
 			SyncPacket packet = ProcessSyncStates.build(states);
-			potentialEvents = getContents(packet);
+			getContents(packet);
 		} catch (InvalidProtocolBufferException e) {
 			log.error("Failed to get sync interests from: {}, unknown protocol?", data.getName(), e);
-		    return potentialEvents;
 		}
-
-		return potentialEvents;
 	}
 
-	public List<NdnEvent> getContents(SyncPacket packet) {
-		List<NdnEvent> events = new ArrayList<>();
+	public void getContents(SyncPacket packet) {
 		for (int i = 0; i < packet.getCount() ; i++) {
 			SyncStateProto.SyncState s = packet.get(i);
 			Name uniqueName = packet.getUniqueName(s);
 			if (!isKnownSyncName(uniqueName)) {
-				Name n = packet.makeName(s);
-				events.add(packet.makeEvent(n, this));
+				//Name n = packet.makeExpressInterestName(s);
+				ndnEvents.enQ(packet.makeExpressInterestEvent(s, this));
+				ndnTraffic.enQ(packet.makeInitPrefixTraffic(s, this));
 				addSyncName(uniqueName);
 			}
 		}
-		return events;
 	}
 
 	//TODO this needs to be way more intelligent.

@@ -1,5 +1,6 @@
 package com.uofantarctica.hoard.protocols;
 
+import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 import net.named_data.jndn.Name;
 import com.uofantarctica.hoard.data_management.SyncDataHoarder;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
@@ -16,17 +17,17 @@ public class NoOpPacket implements SyncPacket {
 	}
 
 	@Override
-	public NdnEvent makeEvent(Name n, SyncDataHoarder hoarder) {
-		return null;
-	}
-
-	@Override
-	public Name makeName(com.uofantarctica.hoard.protocols.SyncStateProto.SyncState s) {
+	public NdnEvent makeExpressInterestEvent(SyncStateProto.SyncState s, SyncDataHoarder hoarder) {
 		return null;
 	}
 
 	@Override
 	public Name getUniqueName(com.uofantarctica.hoard.protocols.SyncStateProto.SyncState s) {
+		return null;
+	}
+
+	@Override
+	public NdnTraffic makeInitPrefixTraffic(SyncStateProto.SyncState s, SyncDataHoarder hoarder) {
 		return null;
 	}
 }

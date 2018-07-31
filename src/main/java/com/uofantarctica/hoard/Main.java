@@ -9,7 +9,7 @@ import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 import com.uofantarctica.hoard.data_management.Hoard;
 import com.uofantarctica.hoard.network_management.ExponentialInterestBackoff;
-import com.uofantarctica.hoard.network_management.InitPrefix;
+import com.uofantarctica.hoard.message_passing.traffic.InitPrefixTraffic;
 import com.uofantarctica.hoard.data_management.MemoryContentCache;
 import com.uofantarctica.hoard.message_passing.BlockingQueue;
 import com.uofantarctica.hoard.network_management.FaceInit;
@@ -28,7 +28,6 @@ public class Main {
 	private static final Logger log = LoggerFactory.getLogger(Main.class);
 	public static void main(String[] args) {
 		org.apache.log4j.Logger.getRootLogger().setLevel(Level.TRACE);
-		//BasicConfigurator.configure();
 		log.debug("Starting.");
 		NonBlockingQueue<NdnEvent> ndnEvents = new NonBlockingQueue<>();
 		BlockingQueue<NdnTraffic> ndnTraffic = new BlockingQueue<>(5l);
@@ -67,7 +66,7 @@ public class Main {
 		Hoard hoard = new Hoard(cache, deQNdnTraffic);
 		dataHoardExecutor.execute(hoard);
 
-		List<InitPrefix> routesToMonitor = new ArrayList<>();
+		List<InitPrefixTraffic> routesToMonitor = new ArrayList<>();
 		/*
 		routesToMonitor.add("/ndn/broadcast/ChronoChat-0.3");
 		routesToMonitor.add("/ndn/broadcast/data");
@@ -78,17 +77,18 @@ public class Main {
 		//routesToMonitor.add("/ndn/broadcast/");
 		//routesToMonitor.add("/ndn/broadcast/edu/ucla/remap/ndnchat/");
 		String routeName = "/ndn/broadcast/ChronoChat-0.3/ndnchat";
-		routesToMonitor.add(new InitPrefix(routeName,
-				InitPrefix.PrefixType.DSYNC,
-                enQNdnEvent,
-				enQNdnTraffic,
-				cache));
-
 		ExponentialInterestBackoff retryPolicy =
 				new ExponentialInterestBackoff(5000, 120000, 30);
 
-		for (InitPrefix r : routesToMonitor) {
-			r.init( retryPolicy);
+		routesToMonitor.add(new InitPrefixTraffic(routeName,
+				InitPrefixTraffic.PrefixType.DSYNC,
+                enQNdnEvent,
+				enQNdnTraffic,
+				cache,
+				retryPolicy));
+
+		for (InitPrefixTraffic r : routesToMonitor) {
+			enQNdnTraffic.enQ(r);
 		}
 		try {
 			ndnExecutor.shutdown();

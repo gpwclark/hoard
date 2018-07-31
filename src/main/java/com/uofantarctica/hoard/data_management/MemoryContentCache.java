@@ -149,6 +149,7 @@ public class MemoryContentCache implements OnInterestCallback {
 	public final void
 	add(Data data)
 	{
+		log.debug("add data: {}", data.getName().toUri());
 		double nowMilliseconds = System.currentTimeMillis();
 		doCleanup(nowMilliseconds);
 

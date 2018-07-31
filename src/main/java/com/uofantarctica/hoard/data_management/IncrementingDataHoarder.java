@@ -27,7 +27,6 @@ public class IncrementingDataHoarder extends DataHoarder {
 		this.dsyncProducerPrefix = initialPrefix.getSubName(0, initialPrefix.size() - 1);
 	}
 
-	//TODO so there needs to be a cache.registerPrefix here.?
 	@Override
 	protected void processData(Interest interest, Data data) {
 		log.debug("Dequeue and enQ data: {} ", data.getName().toUri());
