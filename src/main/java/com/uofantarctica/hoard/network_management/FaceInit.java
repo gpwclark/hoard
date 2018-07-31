@@ -9,6 +9,7 @@ import net.named_data.jndn.util.Blob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
@@ -132,7 +133,7 @@ public class FaceInit {
 			0xcb, 0xea, 0x8f
 	});
 
-	public static void pumpFaceAwhile(Face face, long awhile) {
+	public static void pumpFaceAwhile(Face face, long awhile) throws IOException {
 		long startTime0 = System.currentTimeMillis();
 		long timeNow0 = System.currentTimeMillis();
 		while((timeNow0 - startTime0) <= awhile) {
@@ -141,6 +142,10 @@ public class FaceInit {
 				face.processEvents();
 				Thread.sleep(10);
 			}
+			catch (IOException e) {
+				log.error("failed in pumpFaceAwhile", e);
+				throw e;
+			}
 			catch (Exception e) {
 				log.error("failed in pumpFaceAwhile", e);
 			}
@@ -148,14 +153,19 @@ public class FaceInit {
 
 	}
 
-	public static LocalFace getFace() {
+	public static Face getRawFace() throws IOException {
 		String host = "127.0.0.1";
 		int port = 6363;
 		//Face face = new Face(host, port);
 		Face face = new Face(new TcpTransport(), new TcpTransport.ConnectionInfo(host, port));
-		//TODO sign packets? no? provenance?
 		SecurityData db = getSecurityData(face);
 		pumpFaceAwhile(face, 2000);
+		return face;
+	}
+
+	public static LocalFace getFace() throws IOException {
+		Face face = getRawFace();
+		//TODO sign packets? no? provenance?
 		return new LocalFace(face);
 	}
 

@@ -14,6 +14,11 @@ public class ExpressIncrementingInterest implements NdnEvent {
     	this.hoarder = hoarder;
     }
 
+	public ExpressIncrementingInterest(Interest i, DataHoarder hoarder) {
+		this.interest = i;
+		this.hoarder = hoarder;
+	}
+
 	@Override
     public void fire(LocalFace face) {
 	    face.expressInterest(interest, hoarder);
@@ -22,7 +27,7 @@ public class ExpressIncrementingInterest implements NdnEvent {
 	@Override
 	public String toString() {
 		return "ExpressIncrementingInterest{" +
-				"interest=" + interest.toString() +
+				"interest=" + interest.getName().toUri() +
 				", hoarder=" + hoarder +
 				'}';
 	}

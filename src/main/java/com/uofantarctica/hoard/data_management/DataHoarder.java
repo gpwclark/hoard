@@ -1,5 +1,6 @@
 package com.uofantarctica.hoard.data_management;
 
+import com.uofantarctica.hoard.network_management.ExponentialBackoff;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
@@ -14,17 +15,16 @@ import com.uofantarctica.hoard.message_passing.event.ExpressDelayedInterest;
 import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
-import com.uofantarctica.hoard.network_management.ExponentialInterestBackoff;
 
 public abstract class DataHoarder implements OnData, OnTimeout, OnNetworkNack {
     private static final Logger log = LoggerFactory.getLogger(DataHoarder.class);
 
     protected final Enqueue<NdnEvent> ndnEvents;
 	protected final Enqueue<NdnTraffic> ndnTraffic;
-	protected final ExponentialInterestBackoff retryPolicy;
+	protected final ExponentialBackoff retryPolicy;
     public DataHoarder(Enqueue<NdnEvent> ndnEvents,
                        Enqueue<NdnTraffic> ndnTraffic,
-                       ExponentialInterestBackoff retryPolicy) {
+                       ExponentialBackoff retryPolicy) {
         this.ndnEvents = ndnEvents;
 	    this.ndnTraffic = ndnTraffic;
 	    this.retryPolicy = retryPolicy;
@@ -33,6 +33,7 @@ public abstract class DataHoarder implements OnData, OnTimeout, OnNetworkNack {
 
 	@Override
     public void onData(Interest interest, Data data) {
+    	retryPolicy.begin(); //need to make sure we're not ever carrying forward retries.
         processData(interest, data);
     }
 

@@ -1,10 +1,10 @@
 package com.uofantarctica.hoard.data_management;
 
 import com.uofantarctica.dsync.model.Rolodex;
+import com.uofantarctica.hoard.network_management.ExponentialBackoff;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
-import com.uofantarctica.hoard.network_management.ExponentialInterestBackoff;
 
 public class DSyncRolodexDataHoarder extends com.uofantarctica.hoard.data_management.DataHoarder {
 	private final Rolodex rolodex;
@@ -13,7 +13,7 @@ public class DSyncRolodexDataHoarder extends com.uofantarctica.hoard.data_manage
 
 	public DSyncRolodexDataHoarder(String broadcastPrefix,
 			com.uofantarctica.hoard.data_management.SyncDataHoarder syncDataHoarder,
-			ExponentialInterestBackoff retryPolicy ) {
+			ExponentialBackoff retryPolicy ) {
 		super(syncDataHoarder.getNdnEvents(), syncDataHoarder.getNdnTraffic(), retryPolicy);
 		this.rolodex = new Rolodex("hoard", "rolodex");
 		this.syncDataHoarder = syncDataHoarder;

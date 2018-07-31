@@ -1,6 +1,7 @@
 package com.uofantarctica.hoard.data_management;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.uofantarctica.hoard.network_management.ExponentialBackoff;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
@@ -9,14 +10,11 @@ import org.slf4j.LoggerFactory;
 import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
-import com.uofantarctica.hoard.network_management.ExponentialInterestBackoff;
 import com.uofantarctica.hoard.protocols.ProcessSyncStates;
 import com.uofantarctica.hoard.protocols.SyncPacket;
 import com.uofantarctica.hoard.protocols.SyncStateProto;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class SyncDataHoarder extends DataHoarder {
@@ -25,7 +23,7 @@ public class SyncDataHoarder extends DataHoarder {
 	private final MemoryContentCache cache;
 	public SyncDataHoarder(Enqueue<NdnEvent> ndnEvents,
 						   Enqueue<NdnTraffic> ndnTraffic,
-						   ExponentialInterestBackoff retryPolicy,
+						   ExponentialBackoff retryPolicy,
 	                       MemoryContentCache cache) {
 		super(ndnEvents, ndnTraffic, retryPolicy);
 		this.cache = cache;
@@ -43,7 +41,7 @@ public class SyncDataHoarder extends DataHoarder {
 		return ndnTraffic;
 	}
 
-	public ExponentialInterestBackoff getRetryPolicy() {
+	public ExponentialBackoff getRetryPolicy() {
 		return retryPolicy;
 	}
 
@@ -84,6 +82,9 @@ public class SyncDataHoarder extends DataHoarder {
 	}
 
 	public void addSyncName(Name n) {
+		log.debug("===================================");
+		log.debug("New sync name added: {}", n.toUri());
+		log.debug("===================================");
 	    knownSyncNames.add(n.toUri());
 	}
 

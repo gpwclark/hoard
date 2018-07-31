@@ -2,7 +2,7 @@ package com.uofantarctica.hoard.message_passing.traffic;
 
 import com.uofantarctica.hoard.data_management.CacheOnInterestListener;
 import com.uofantarctica.hoard.data_management.Hoard;
-import com.uofantarctica.hoard.network_management.ExponentialInterestBackoff;
+import com.uofantarctica.hoard.network_management.ExponentialBackoff;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
 import org.slf4j.Logger;
@@ -37,10 +37,10 @@ public class InitPrefixTraffic implements NdnTraffic {
     private final Enqueue<NdnEvent> enQNdnEvent;
     private final Enqueue<NdnTraffic> enQNdnTraffic;
     private final MemoryContentCache cache;
-    private final ExponentialInterestBackoff retryPolicy;
+    private final ExponentialBackoff retryPolicy;
 
     public InitPrefixTraffic(String routeName, PrefixType type, Enqueue<NdnEvent> enQNdnEvent, Enqueue<NdnTraffic> enQNdnTraffic,
-                             MemoryContentCache cache, ExponentialInterestBackoff retryPolicy) {
+                             MemoryContentCache cache, ExponentialBackoff retryPolicy) {
         this.routeName = routeName;
         this.type = type;
         this.enQNdnEvent = enQNdnEvent;

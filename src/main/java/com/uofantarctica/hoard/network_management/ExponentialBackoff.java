@@ -7,14 +7,14 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 
-public class ExponentialInterestBackoff extends BoundedExponentialBackoff {
-	private static final Logger log = LoggerFactory.getLogger(ExponentialInterestBackoff.class);
+public class ExponentialBackoff extends BoundedExponentialBackoff {
+	private static final Logger log = LoggerFactory.getLogger(ExponentialBackoff.class);
 
 	private long baseSleepTimeMs;
 	private long maxSleepTimeMs;
 	private int max;
 
-	public ExponentialInterestBackoff(long baseSleepTimeMs, long maxSleepTimeMs, int max) {
+	public ExponentialBackoff(long baseSleepTimeMs, long maxSleepTimeMs, int max) {
 		super(baseSleepTimeMs, maxSleepTimeMs, max);
 		this.baseSleepTimeMs = baseSleepTimeMs;
 		this.maxSleepTimeMs = maxSleepTimeMs;
@@ -55,7 +55,7 @@ public class ExponentialInterestBackoff extends BoundedExponentialBackoff {
 			return true;
 		}
 		catch (Exception e) {
-			log.error("failed to access private member variable, to increment attempts in ExponentialInterestBackoff",
+			log.error("failed to access private member variable, to increment attempts in ExponentialBackoff",
 					e);
 			return false;
 		}
@@ -77,7 +77,11 @@ public class ExponentialInterestBackoff extends BoundedExponentialBackoff {
 
 
 	@Override
-	public ExponentialInterestBackoff duplicate() {
-		return new ExponentialInterestBackoff(baseSleepTimeMs, maxSleepTimeMs, max);
+	public ExponentialBackoff duplicate() {
+		return new ExponentialBackoff(baseSleepTimeMs, maxSleepTimeMs, max);
+	}
+
+	public boolean sleepingRetry() {
+		return super.allowRetry();
 	}
 }

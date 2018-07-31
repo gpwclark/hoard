@@ -1,5 +1,6 @@
 package com.uofantarctica.hoard;
 
+import com.uofantarctica.hoard.network_management.ExponentialBackoff;
 import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,7 +9,6 @@ import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 import com.uofantarctica.hoard.data_management.Hoard;
-import com.uofantarctica.hoard.network_management.ExponentialInterestBackoff;
 import com.uofantarctica.hoard.message_passing.traffic.InitPrefixTraffic;
 import com.uofantarctica.hoard.data_management.MemoryContentCache;
 import com.uofantarctica.hoard.message_passing.BlockingQueue;
@@ -17,6 +17,7 @@ import com.uofantarctica.hoard.network_management.LocalFace;
 import com.uofantarctica.hoard.network_management.NdnServer;
 import com.uofantarctica.hoard.message_passing.NonBlockingQueue;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -57,7 +58,12 @@ public class Main {
 						return t;
 					}
 				});
-		LocalFace face = FaceInit.getFace();
+		LocalFace face = null;
+		try {
+			face = FaceInit.getFace();
+		} catch (IOException e) {
+			face = new LocalFace();
+		}
 		NdnServer network = new NdnServer(face, deQNdnEvent);
 		ndnExecutor.execute(network);
 
@@ -77,8 +83,8 @@ public class Main {
 		//routesToMonitor.add("/ndn/broadcast/");
 		//routesToMonitor.add("/ndn/broadcast/edu/ucla/remap/ndnchat/");
 		String routeName = "/ndn/broadcast/ChronoChat-0.3/ndnchat";
-		ExponentialInterestBackoff retryPolicy =
-				new ExponentialInterestBackoff(5000, 120000, 30);
+		ExponentialBackoff retryPolicy =
+				new ExponentialBackoff(5000, 120000, 30);
 
 		routesToMonitor.add(new InitPrefixTraffic(routeName,
 				InitPrefixTraffic.PrefixType.DSYNC,

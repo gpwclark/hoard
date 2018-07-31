@@ -4,6 +4,8 @@ import net.named_data.jndn.Interest;
 import com.uofantarctica.hoard.data_management.DataHoarder;
 import com.uofantarctica.hoard.network_management.LocalFace;
 
+import java.util.Objects;
+
 public class ExpressInterest implements NdnEvent {
 	private final Interest interest;
 	private final DataHoarder dataHoarder;
@@ -23,6 +25,19 @@ public class ExpressInterest implements NdnEvent {
 		return "ExpressInterest{" +
 				"interest=" + interest.toUri() +
 				'}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		ExpressInterest that = (ExpressInterest) o;
+		return Objects.equals(interest, that.interest);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(interest);
 	}
 }
 

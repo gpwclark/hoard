@@ -22,9 +22,8 @@ public class ExpressDelayedInterest implements NdnEvent {
 	@Override
 	public String toString() {
 		return "ExpressDelayedInterest{" +
-				"delayedNdnEvent=" + delayedNdnEvent +
+				", interest=" + interest.getName().toUri() +
 				", delay=" + delay +
-				", interest=" + interest +
 				'}';
 	}
 }
