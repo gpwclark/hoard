@@ -60,9 +60,9 @@ public class Main {
 				});
 		LocalFace face = null;
 		try {
-			face = FaceInit.getFace();
+			face = FaceInit.getFace(enQNdnEvent);
 		} catch (IOException e) {
-			face = new LocalFace();
+			face = new LocalFace(enQNdnEvent);
 		}
 		NdnServer network = new NdnServer(face, deQNdnEvent);
 		ndnExecutor.execute(network);

@@ -1,5 +1,7 @@
 package com.uofantarctica.hoard.network_management;
 
+import com.uofantarctica.hoard.message_passing.Enqueue;
+import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import net.named_data.jndn.Face;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.security.KeyChain;
@@ -163,10 +165,10 @@ public class FaceInit {
 		return face;
 	}
 
-	public static LocalFace getFace() throws IOException {
+	public static LocalFace getFace(Enqueue<NdnEvent> ndnEvents) throws IOException {
 		Face face = getRawFace();
 		//TODO sign packets? no? provenance?
-		return new LocalFace(face);
+		return new LocalFace(face, ndnEvents);
 	}
 
 	public static class SecurityData {

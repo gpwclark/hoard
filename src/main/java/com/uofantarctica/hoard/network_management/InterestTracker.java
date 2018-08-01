@@ -1,6 +1,7 @@
 package com.uofantarctica.hoard.network_management;
 
 import com.uofantarctica.hoard.data_management.DataHoarder;
+import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.NetworkNack;
@@ -8,30 +9,33 @@ import net.named_data.jndn.OnData;
 import net.named_data.jndn.OnNetworkNack;
 import net.named_data.jndn.OnTimeout;
 
-public class HoardTracker implements OnData, OnTimeout, OnNetworkNack {
+public class InterestTracker implements OnData, OnTimeout, OnNetworkNack {
 	private final LocalFace face;
+	private final ExpressInterest expressInterest;
 	private final DataHoarder hoarder;
-	public HoardTracker(LocalFace face, Interest interest, DataHoarder hoarder) {
+
+	public InterestTracker(LocalFace face, ExpressInterest expressInterest) {
 		this.face = face;
-		this.hoarder = hoarder;
-		this.face.trackOutboundInterest(interest, hoarder);
+		this.expressInterest = expressInterest;
+		this.hoarder = expressInterest.getHoarder();
+		this.face.trackOutboundInterest(expressInterest);
 	}
 
 	@Override
 	public void onData(Interest interest, Data data) {
-		this.face.markInterestInbound(interest, hoarder);
 		hoarder.onData(interest, data);
+		this.face.markInterestInbound(expressInterest);
 	}
 
 	@Override
 	public void onNetworkNack(Interest interest, NetworkNack networkNack) {
-		this.face.markInterestInbound(interest, hoarder);
 		hoarder.onNetworkNack(interest, networkNack);
+		this.face.markInterestInbound(expressInterest);
 	}
 
 	@Override
 	public void onTimeout(Interest interest) {
-		this.face.markInterestInbound(interest, hoarder);
 		hoarder.onTimeout(interest);
+		this.face.markInterestInbound(expressInterest);
 	}
 }

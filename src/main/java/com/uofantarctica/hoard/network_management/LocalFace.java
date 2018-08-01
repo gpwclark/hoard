@@ -1,6 +1,6 @@
 package com.uofantarctica.hoard.network_management;
 
-import com.uofantarctica.hoard.message_passing.event.ExpressIncrementingInterest;
+import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.event.PutData;
@@ -9,7 +9,6 @@ import com.uofantarctica.hoard.message_passing.event.SendEncoding;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Face;
 import net.named_data.jndn.ForwardingFlags;
-import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.OnInterestCallback;
 import net.named_data.jndn.OnRegisterFailed;
@@ -18,12 +17,9 @@ import net.named_data.jndn.encoding.WireFormat;
 import net.named_data.jndn.util.Blob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.uofantarctica.hoard.data_management.DataHoarder;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -35,21 +31,24 @@ public class LocalFace {
 	private Face face;
 	private final Set<RegisterPrefix> prefixRegistrations = new HashSet<>();
 	private final Set<ExpressInterest> outboundInterest = new HashSet<>();
-	private final ExponentialBackoff retryFacePolicy = new ExponentialBackoff(10, 120000, Integer.MAX_VALUE);
+	private final ExponentialBackoff retryFacePolicy = new ExponentialBackoff(10, 120000, -1);
 	private boolean isRetrying = false;
-	private final List<NdnEvent> eventsToRetry = new ArrayList<>();
+	private final Set<NdnEvent> eventsToRetry = new HashSet<>();
+	private final Enqueue<NdnEvent> ndnEvents;
 
-	public LocalFace(Face face) {
+	public LocalFace(Face face, Enqueue<NdnEvent> ndnEvents) {
 		this.face = face;
+		this.ndnEvents = ndnEvents;
 	}
 
-	public LocalFace() {
+	public LocalFace(Enqueue<NdnEvent> ndnEvents) {
 		retryInit();
+		this.ndnEvents = ndnEvents;
 	}
 
 	private void retryInit() {
 		if (isRetrying) {
-			throw new AlreadyRetryingException();
+			throw new FailedReconnectionException();
 		}
 		else {
 			isRetrying = true;
@@ -62,11 +61,12 @@ public class LocalFace {
 					face = FaceInit.getRawFace();
 					retryNdnEvents();
 					break;
-				} catch (IOException e) {
-					log.error("Failed in retrying face", e);
 				}
-				catch (AlreadyRetryingException e) {
+				catch (FailedReconnectionException e) {
 					log.error("Failed at retrying, while retrying, loop again", e);
+				}
+				catch (Exception e) {
+					log.error("Failed in retrying face", e);
 				}
 				log.debug("Retrying face init, attempt: {}", attempts);
 			} while(retryFacePolicy.sleepingRetry());
@@ -75,25 +75,27 @@ public class LocalFace {
 	}
 
 	private void retryNdnEvents() {
+		for (ExpressInterest expressInterest : outboundInterest) {
+			//make sure we don't have duplicates.
+			eventsToRetry.add(expressInterest);
+		}
 		for (NdnEvent ndnEvent : eventsToRetry) {
 			ndnEvent.fire(this);
 		}
-		for (ExpressInterest expressInterest : outboundInterest) {
-			expressInterest.fire(this);
-		}
-		for (RegisterPrefix prefixRegistration : prefixRegistrations) {
+		for (RegisterPrefix prefixRegistration : prefixRegistrations) { //TODO make register prefixes first?
 			prefixRegistration.fire(this);
 		}
 		eventsToRetry.clear();
 	}
 
-	public void expressInterest(Interest interest, DataHoarder hoarder) {
+	public void expressInterest(ExpressInterest expressInterest) {
 		try {
-			HoardTracker tracker = new HoardTracker(this, interest, hoarder);
-			face.expressInterest(interest, tracker, tracker, tracker);
+			InterestTracker tracker = new InterestTracker(this, expressInterest);
+			face.expressInterest(expressInterest.getInterest(), tracker, tracker, tracker);
 		} catch (IOException e) {
-			log.error("Error expressInterest: {}", interest.getName().toUri(), e);
-			eventsToRetry.add(new ExpressIncrementingInterest(interest, hoarder));
+			markInterestInbound(expressInterest);
+			log.error("Error expressInterest: {}", expressInterest.getInterest().getName().toUri(), e);
+			eventsToRetry.add(expressInterest);
 			retryInit();
 		}
 	}
@@ -132,25 +134,36 @@ public class LocalFace {
 		}
 	}
 
-	public void send(Blob dataEncoding) {
+	public void send(Blob dataEncoding, Name name) {
 		try {
 			face.send(dataEncoding);
-			eventsToRetry.add(new SendEncoding(dataEncoding));
+			eventsToRetry.add(new SendEncoding(dataEncoding, name));
 		} catch (IOException e) {
 			log.error("Error send, IOException, retryingInit", e);
 			retryInit();
 		}
 	}
 
+	//TODO handle without face, the events it tracks will die on reconnection.
 	public void callLater(double delay, Runnable action) {
 		face.callLater(delay, action);
 	}
 
-	public void trackOutboundInterest(Interest interest, DataHoarder hoarder) {
-		outboundInterest.add(new ExpressInterest(interest, hoarder));
+	public void trackOutboundInterest(ExpressInterest expressInterest) {
+		log.debug("Add interest to queue: {}", expressInterest);
+		outboundInterest.add(expressInterest);
+		printOutbounInterests();
 	}
 
-	public void markInterestInbound(Interest interest, DataHoarder hoarder) {
-		outboundInterest.remove(new ExpressInterest(interest, hoarder));
+	public void markInterestInbound(ExpressInterest expressInterest) {
+		log.debug("Remove interest to queue: {}", expressInterest);
+		outboundInterest.remove(expressInterest);
+		printOutbounInterests();
+	}
+
+	private void printOutbounInterests() {
+		for (ExpressInterest expressInterest : outboundInterest) {
+			log.debug("Current outbound interest queue: {}", expressInterest);
+		}
 	}
 }

@@ -1,16 +1,25 @@
 package com.uofantarctica.hoard.message_passing.event;
 
+import net.named_data.jndn.Name;
 import net.named_data.jndn.util.Blob;
 import com.uofantarctica.hoard.network_management.LocalFace;
 
-public class SendEncoding implements NdnEvent {
+public class SendEncoding extends NdnEvent {
 	private final Blob dataEncoding;
-	public SendEncoding(Blob dataEncoding) {
+	private final Name name;
+
+	public SendEncoding(Blob dataEncoding, Name name) {
 		this.dataEncoding = dataEncoding;
+		this.name = name;
 	}
 
 	public void fire(LocalFace face) {
-		face.send(dataEncoding);
+		face.send(dataEncoding, name);
+	}
+
+	@Override
+	String getUniqueName() {
+		return SendEncoding.class.getSimpleName() + name.toUri();
 	}
 
 	@Override

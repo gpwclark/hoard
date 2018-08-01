@@ -7,7 +7,7 @@ import net.named_data.jndn.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.uofantarctica.hoard.message_passing.Enqueue;
-import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
+import com.uofantarctica.hoard.message_passing.event.SimpleExpressInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.traffic.FlatDataTraffic;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
@@ -34,7 +34,7 @@ public class IncrementingDataHoarder extends DataHoarder {
 		++currentSegment;
 		Name nextDataName = new Name(dsyncProducerPrefix)
 				.append(Long.toString(currentSegment));
-		ndnEvents.enQ(new ExpressInterest(new Interest(nextDataName), this));
+		ndnEvents.enQ(new SimpleExpressInterest(new Interest(nextDataName), this));
 	}
 
 	@Override

@@ -13,8 +13,8 @@ public class DSyncRolodexDataHoarder extends com.uofantarctica.hoard.data_manage
 
 	public DSyncRolodexDataHoarder(String broadcastPrefix,
 			com.uofantarctica.hoard.data_management.SyncDataHoarder syncDataHoarder,
-			ExponentialBackoff retryPolicy ) {
-		super(syncDataHoarder.getNdnEvents(), syncDataHoarder.getNdnTraffic(), retryPolicy);
+			ExponentialBackoff syncDataRetryPolicy) {
+		super(syncDataHoarder.getNdnEvents(), syncDataHoarder.getNdnTraffic(), syncDataRetryPolicy);
 		this.rolodex = new Rolodex("hoard", "rolodex");
 		this.syncDataHoarder = syncDataHoarder;
 		this.broadcastPrefix = broadcastPrefix;
@@ -38,7 +38,7 @@ public class DSyncRolodexDataHoarder extends com.uofantarctica.hoard.data_manage
 		expressInterest(interest,
 				new DSyncRolodexDataHoarder(broadcastPrefix,
 						syncDataHoarder,
-						retryPolicy .duplicate()));
+						retryPolicy.duplicate()));
 	}
 
 	@Override

@@ -5,29 +5,31 @@ import net.named_data.jndn.Name;
 import com.uofantarctica.hoard.data_management.DataHoarder;
 import com.uofantarctica.hoard.network_management.LocalFace;
 
-public class ExpressIncrementingInterest implements NdnEvent {
-	private final Interest interest;
-	private final DataHoarder hoarder;
+//TODO this class might be unnecessary...
+public class ExpressIncrementingInterest extends ExpressInterest {
 
     public ExpressIncrementingInterest(Name n, DataHoarder hoarder) {
-    	this.interest = new Interest(n);
-    	this.hoarder = hoarder;
+    	super(new Interest(n), hoarder);
     }
 
 	public ExpressIncrementingInterest(Interest i, DataHoarder hoarder) {
-		this.interest = i;
-		this.hoarder = hoarder;
+    	super(i, hoarder);
 	}
 
 	@Override
     public void fire(LocalFace face) {
-	    face.expressInterest(interest, hoarder);
+	    face.expressInterest(this);
     }
+
+	@Override
+	public String getUniqueName() {
+		return SimpleExpressInterest.class.getSimpleName() + interest.getName().toUri();
+	}
 
 	@Override
 	public String toString() {
 		return "ExpressIncrementingInterest{" +
-				"interest=" + interest.getName().toUri() +
+				"interest=" + interest.toUri() +
 				", hoarder=" + hoarder +
 				'}';
 	}

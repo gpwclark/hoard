@@ -10,7 +10,7 @@ import net.named_data.jndn.OnRegisterSuccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.uofantarctica.hoard.message_passing.Enqueue;
-import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
+import com.uofantarctica.hoard.message_passing.event.SimpleExpressInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.data_management.DataHoarder;
 import com.uofantarctica.hoard.data_management.MemoryContentCache;
@@ -37,7 +37,7 @@ public abstract class InterestListener implements OnInterestCallback, OnRegister
 
     protected void sendInitialInterest(Interest interest) {
     	interest.setInterestLifetimeMilliseconds(interest.getInterestLifetimeMilliseconds());
-    	ndnEvents.enQ(new ExpressInterest(interest, hoarder));
+    	ndnEvents.enQ(new SimpleExpressInterest(interest, hoarder));
     }
 
     @Override

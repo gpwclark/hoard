@@ -1,5 +1,6 @@
 package com.uofantarctica.hoard.data_management;
 
+import com.uofantarctica.hoard.message_passing.event.SimpleExpressInterest;
 import com.uofantarctica.hoard.network_management.ExponentialBackoff;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
@@ -12,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.ExpressDelayedInterest;
-import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 
@@ -55,7 +55,8 @@ public abstract class DataHoarder implements OnData, OnTimeout, OnNetworkNack {
 		    }
 	    },
 		retryPolicy.getInterestLifetime(),
-		interest));
+		interest,
+		this));
     }
 
 	@Override
@@ -81,7 +82,7 @@ public abstract class DataHoarder implements OnData, OnTimeout, OnNetworkNack {
 	public void expressInterest(Interest newInterest, DataHoarder hoarder) {
         try {
 	        newInterest.setInterestLifetimeMilliseconds(retryPolicy.getInterestLifetime());
-            ndnEvents.enQ(new ExpressInterest(newInterest, hoarder));
+            ndnEvents.enQ(new SimpleExpressInterest(newInterest, hoarder));
         } catch (Exception e) {
             log.error("Failed to retry and express interest", e);
         }

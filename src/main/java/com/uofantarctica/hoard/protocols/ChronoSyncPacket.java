@@ -1,9 +1,9 @@
 package com.uofantarctica.hoard.protocols;
 
+import com.uofantarctica.hoard.message_passing.event.SimpleExpressInterest;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
-import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.data_management.SyncDataHoarder;
 
@@ -23,7 +23,7 @@ public class ChronoSyncPacket extends SyncStateProtoPacket {
 	public NdnEvent makeExpressInterestEvent(SyncStateProto.SyncState s, SyncDataHoarder hoarder) {
     	Name n = makeExpressInterestName(s);
     	//TODO what's the timeout here?
-		return new ExpressInterest(new Interest(n), hoarder.newFlatDataHoarder());
+		return new SimpleExpressInterest(new Interest(n), hoarder.newFlatDataHoarder());
 	}
 
 	@Override

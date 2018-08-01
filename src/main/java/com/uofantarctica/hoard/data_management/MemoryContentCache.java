@@ -191,7 +191,7 @@ public class MemoryContentCache implements OnInterestCallback {
 				// Send to the same face from the original call to onInterest.
 				// wireEncode returns the cached encoding if available.
 				//pendingInterest.getFace().send(data.wireEncode());
-				ndnEvents.enQ(new SendEncoding(data.wireEncode()));
+				ndnEvents.enQ(new SendEncoding(data.wireEncode(), data.getName()));
 
 				// The pending interest is satisfied, so remove it.
 				removePendingInterest(i);
@@ -270,6 +270,7 @@ public class MemoryContentCache implements OnInterestCallback {
 
 		Name.Component selectedComponent = null;
 		Blob selectedEncoding = null;
+		Name selectedName = null;
 		// We need to iterate over both arrays.
 		int totalSize = staleTimeCache_.size() + noStaleTimeCache_.size();
 		for (int i = 0; i < totalSize; ++i) {
@@ -293,7 +294,7 @@ public class MemoryContentCache implements OnInterestCallback {
 				&& !isFresh)) {
 				if (interest.getChildSelector() < 0) {
 					// No child selector, so send the first match that we have found.
-					events.add(new SendEncoding(content.getDataEncoding()));
+					events.add(new SendEncoding(content.getDataEncoding(), content.getData().getName()));
 					return events;
 				}
 				else {
@@ -305,9 +306,10 @@ public class MemoryContentCache implements OnInterestCallback {
 						component = emptyComponent_;
 
 					boolean gotBetterMatch = false;
-					if (selectedEncoding == null)
+					if (selectedEncoding == null) {
 						// Save the first match.
 						gotBetterMatch = true;
+					}
 					else {
 						if (interest.getChildSelector() == 0) {
 							// Leftmost child.
@@ -324,6 +326,7 @@ public class MemoryContentCache implements OnInterestCallback {
 					if (gotBetterMatch) {
 						selectedComponent = component;
 						selectedEncoding = content.getDataEncoding();
+						selectedName = content.getData().getName();
 					}
 				}
 			}
@@ -331,7 +334,7 @@ public class MemoryContentCache implements OnInterestCallback {
 
 		if (selectedEncoding != null) {
 			// We found the leftmost or rightmost child.
-			events.add(new SendEncoding(selectedEncoding));
+			events.add(new SendEncoding(selectedEncoding, selectedName));
 		}
 		else {
 			// Call the onDataNotFound callback (if defined).

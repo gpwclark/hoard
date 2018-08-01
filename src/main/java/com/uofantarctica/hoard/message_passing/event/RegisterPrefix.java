@@ -12,7 +12,7 @@ import org.apache.http.impl.conn.Wire;
 
 import java.util.Objects;
 
-public class RegisterPrefix implements NdnEvent {
+public class RegisterPrefix extends NdnEvent {
 	private final Name prefix;
 	private final OnInterestCallback onInterestCallback;
 	private final OnRegisterFailed onRegisterFailed;
@@ -50,24 +50,14 @@ public class RegisterPrefix implements NdnEvent {
 		face.registerPrefix(prefix, onInterestCallback, onRegisterFailed, onRegisterSuccess, flags, wireFormat);
 	}
 
+	public String getUniqueName() {
+		return RegisterPrefix.class.getSimpleName() + prefix.toUri();
+	}
+
 	@Override
 	public String toString() {
 		return "RegisterPrefix{" +
 				"prefix=" + prefix.toUri() +
 				'}';
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		RegisterPrefix that = (RegisterPrefix) o;
-		return Objects.equals(prefix, that.prefix);
-	}
-
-	@Override
-	public int hashCode() {
-
-		return Objects.hash(prefix);
 	}
 }

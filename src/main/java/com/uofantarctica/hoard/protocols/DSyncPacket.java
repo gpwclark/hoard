@@ -37,6 +37,7 @@ public class DSyncPacket extends SyncStateProtoPacket {
 		return n;
 	}
 
+	//TODO do we need all of these arguments to InitPrefixTraffic?
 	@Override
 	public NdnTraffic makeInitPrefixTraffic(SyncStateProto.SyncState s, SyncDataHoarder hoarder) {
     	Name n = getUniqueName(s);

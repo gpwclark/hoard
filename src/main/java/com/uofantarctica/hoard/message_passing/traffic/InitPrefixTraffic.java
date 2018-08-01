@@ -2,13 +2,13 @@ package com.uofantarctica.hoard.message_passing.traffic;
 
 import com.uofantarctica.hoard.data_management.CacheOnInterestListener;
 import com.uofantarctica.hoard.data_management.Hoard;
+import com.uofantarctica.hoard.message_passing.event.SimpleExpressInterest;
 import com.uofantarctica.hoard.network_management.ExponentialBackoff;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.uofantarctica.hoard.message_passing.Enqueue;
-import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.event.RegisterPrefix;
 import com.uofantarctica.hoard.data_management.DSyncRolodexDataHoarder;
@@ -77,8 +77,10 @@ public class InitPrefixTraffic implements NdnTraffic {
     }
 
 	private void initDSyncPrefix() {
+    	ExponentialBackoff syncDataRetryPolicy =
+			    new ExponentialBackoff(1000, 120000, -1);
 		Name prefix = new Name(routeName);
-		SyncDataHoarder hoarder = new SyncDataHoarder(enQNdnEvent, enQNdnTraffic,retryPolicy, cache);
+		SyncDataHoarder hoarder = new SyncDataHoarder(enQNdnEvent, enQNdnTraffic, retryPolicy, cache);
     	/*
 		SyncInterestListener interestListener = new SyncInterestListener(cache, enQNdnEvent, hoarder);
 		enQNdnEvent.enQ(new RegisterPrefix(prefix, interestListener));
@@ -89,8 +91,8 @@ public class InitPrefixTraffic implements NdnTraffic {
 				.append(Long.toString(0L));
 		Interest rolodexInterest = new Interest(rolodexName)
 			.setInterestLifetimeMilliseconds(10000D);
-		enQNdnEvent.enQ(new ExpressInterest(rolodexInterest,
-				new DSyncRolodexDataHoarder(routeName, hoarder, retryPolicy.duplicate())));
+		enQNdnEvent.enQ(new SimpleExpressInterest(rolodexInterest,
+				new DSyncRolodexDataHoarder(routeName, hoarder, syncDataRetryPolicy)));
 	}
 
     private void initChronoSyncPrefix() {
