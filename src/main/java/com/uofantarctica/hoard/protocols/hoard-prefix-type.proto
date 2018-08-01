@@ -1,0 +1,17 @@
+syntax = "proto2";
+
+package com.uofantarctica.hoard.protocols;
+
+message PrefixType
+{
+  required string name = 1;
+  enum ActionType
+  {
+    DSYNC = 0;
+    CHRONOSYNC = 1;
+    REREQUEST = 2;
+    CACHE = 3;
+    HOARD_DISCOVERY = 4;
+  }
+  required ActionType type = 2;
+}

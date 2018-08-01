@@ -180,7 +180,7 @@ public class FaceInit {
 		}
 	}
 
-	private static SecurityData getSecurityData(Face face) {
+	public static SecurityData getSecurityData(Face face) {
 		KeyChain keyChain = null;
 		Name certificateName = null;
 

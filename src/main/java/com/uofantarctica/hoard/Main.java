@@ -1,6 +1,15 @@
 package com.uofantarctica.hoard;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.uofantarctica.dsync.DSync;
+import com.uofantarctica.dsync.model.ReturnStrategy;
 import com.uofantarctica.hoard.network_management.ExponentialBackoff;
+import com.uofantarctica.hoard.protocols.HoardPrefixType;
+import net.named_data.jndn.Data;
+import net.named_data.jndn.Interest;
+import net.named_data.jndn.OnData;
+import net.named_data.jndn.sync.ChronoSync2013;
+import net.named_data.jndn.util.Blob;
 import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,9 +76,52 @@ public class Main {
 		NdnServer network = new NdnServer(face, deQNdnEvent);
 		ndnExecutor.execute(network);
 
-
+		DSync dsync = new DSync(
+			new OnData() {
+				@Override
+				public void onData(Interest interest, Data data) {
+					try {
+						HoardPrefixType.PrefixType prefixType = HoardPrefixType.PrefixType.parseFrom(data.getContent().getImmutableArray());
+						enQNdnTraffic.enQ(new InitPrefixTraffic(prefixType));
+					} catch (InvalidProtocolBufferException e) {
+						log.error("failed to decode hoard prefix type: {}", data.getName().toUri());
+					}
+				}
+			},
+			new ChronoSync2013.OnInitialized() {
+				@Override
+				public void onInitialized() {
+					log.debug("Hoard prefix discovery dsync route initialized.");
+				}
+			},
+			"/ndn/broadcast/data/hoard/",
+			"/ndn/broadcast/hoard/prefix_types",
+			System.currentTimeMillis(),
+			face.getFace(),
+			FaceInit.getSecurityData(face.getFace()).keyChain,
+			"hoard-prefix-disocvery",
+			"hoard",
+			ReturnStrategy.EXACT);
 		MemoryContentCache cache = new MemoryContentCache(enQNdnEvent, enQNdnTraffic);
-		Hoard hoard = new Hoard(cache, deQNdnTraffic);
+		/* TODO in order to work out federation, caches are going to need to be
+		 * separate by namespace, or at least tracked separately.
+		 * Sync namespaces will always have there own cache. Given
+		 * the nature (predictability in naming) of sync protocols, federation is taken
+		 * care of, a sync data packet is all you need to start asking for the right data.
+		 * For all other kinds of prefixes, there's no way to know what data to ask for,
+		 * so, instances of hoard wishing to synchronize these kinds of prefixes must
+		 * communicate the names of their non-sync data, so the other knows what to ask
+		 * for. This means that hoard will use one dsync prefix internally for different
+		 * federated behavior. The first dsync prefix, /hoard/prefix_types/. communicates
+		 * the various calls to init prefix that instance of hoard has been given. Each one
+		 * is it's own datum. Instances of hoard communicate this data to each other and
+		 * decide whether or not to opt in to its collection. Once a given prefix has
+		 * been selected, it's data collection begins. If it is not sync data, this
+		 * requires an extra step. The prefix, /hoard/datasets/<name>/#, will be used for communicating
+		 * the names of data in that dataset. Interested parties need only ask for
+		 * numbered data of the datasets they're interested to  learn what to ask for.
+		 */
+		Hoard hoard = new Hoard(enQNdnEvent, enQNdnTraffic, cache, deQNdnTraffic);
 		dataHoardExecutor.execute(hoard);
 
 		List<InitPrefixTraffic> routesToMonitor = new ArrayList<>();
@@ -82,16 +134,16 @@ public class Main {
 		//routesToMonitor.add("/ndn/broadcast/");
 		//routesToMonitor.add("/ndn/broadcast/");
 		//routesToMonitor.add("/ndn/broadcast/edu/ucla/remap/ndnchat/");
+		HoardPrefixType.PrefixType.Builder builder = HoardPrefixType.PrefixType.newBuilder();
 		String routeName = "/ndn/broadcast/ChronoChat-0.3/ndnchat";
-		ExponentialBackoff retryPolicy =
-				new ExponentialBackoff(5000, 120000, 30);
-
-		routesToMonitor.add(new InitPrefixTraffic(routeName,
-				InitPrefixTraffic.PrefixType.DSYNC,
-                enQNdnEvent,
-				enQNdnTraffic,
-				cache,
-				retryPolicy));
+		builder.setName(routeName)
+			.setType(HoardPrefixType.PrefixType.ActionType.DSYNC);
+		HoardPrefixType.PrefixType prefixType = builder.build();
+		dsync.publishNextMessage(new Data().setContent(new Blob(prefixType.toByteArray())));
+		//TODO if we do end up letting go of a prefix, do we properly handle removing it from the rolodex?
+		// if so, and they were still in the rolodex, wouldn't we end up adding them back and rerequesting
+		// all their data, needs to be thought through more.
+		routesToMonitor.add(new InitPrefixTraffic(prefixType));
 
 		for (InitPrefixTraffic r : routesToMonitor) {
 			enQNdnTraffic.enQ(r);

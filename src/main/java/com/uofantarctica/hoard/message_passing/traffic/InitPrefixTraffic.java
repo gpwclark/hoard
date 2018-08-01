@@ -4,6 +4,7 @@ import com.uofantarctica.hoard.data_management.CacheOnInterestListener;
 import com.uofantarctica.hoard.data_management.Hoard;
 import com.uofantarctica.hoard.message_passing.event.SimpleExpressInterest;
 import com.uofantarctica.hoard.network_management.ExponentialBackoff;
+import com.uofantarctica.hoard.protocols.HoardPrefixType;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
 import org.slf4j.Logger;
@@ -23,46 +24,44 @@ public class InitPrefixTraffic implements NdnTraffic {
 
 	@Override
 	public void process(Hoard hoard) {
+		enQNdnEvent = hoard.getEnQNdnEvent();
+		enQNdnTraffic = hoard.getEnQNdnTraffic();
+		cache = hoard.getCache();
+		retryPolicy = hoard.getRetryPolicy(type);
 		init();
 	}
 
-	public enum PrefixType {
-        DSYNC,
-	    CHRONOSYNC,
-		FLAT_CACHE_AND_PARROT_ON_INTEREST,
-		FLAT_CACHE_ON_INTEREST
-    }
     private final String routeName;
-    private final PrefixType type;
-    private final Enqueue<NdnEvent> enQNdnEvent;
-    private final Enqueue<NdnTraffic> enQNdnTraffic;
-    private final MemoryContentCache cache;
-    private final ExponentialBackoff retryPolicy;
+    private final HoardPrefixType.PrefixType.ActionType type;
+    private Enqueue<NdnEvent> enQNdnEvent;
+    private Enqueue<NdnTraffic> enQNdnTraffic;
+    private MemoryContentCache cache;
+    private ExponentialBackoff retryPolicy;
 
-    public InitPrefixTraffic(String routeName, PrefixType type, Enqueue<NdnEvent> enQNdnEvent, Enqueue<NdnTraffic> enQNdnTraffic,
-                             MemoryContentCache cache, ExponentialBackoff retryPolicy) {
-        this.routeName = routeName;
-        this.type = type;
-        this.enQNdnEvent = enQNdnEvent;
-        this.enQNdnTraffic = enQNdnTraffic;
-        this.cache = cache;
-        this.retryPolicy = retryPolicy;
+    public InitPrefixTraffic(HoardPrefixType.PrefixType prefixType) {
+        this.routeName = prefixType.getName();
+        this.type = prefixType.getType();
     }
 
     public void init() {
         switch (type) {
             case DSYNC: initDSyncPrefix();
                 break;
-			case CHRONOSYNC: initChronoSyncPrefix();
+	        case CHRONOSYNC: initChronoSyncPrefix();
 				break;
-            case FLAT_CACHE_AND_PARROT_ON_INTEREST: initFlatPrefix();
+            case REREQUEST: initFlatPrefix();
                 break;
-	        case FLAT_CACHE_ON_INTEREST: initNormalPrefix();
+	        case CACHE: initNormalPrefix();
+		        break;
+	        case HOARD_DISCOVERY: initHoardDiscovery();
 		        break;
             default: log.error("Got register prefix request with unknown PrefixType");
                 break;
         }
     }
+
+	private void initHoardDiscovery() {
+	}
 
 	private void initNormalPrefix() {
 		FlatDataHoarder hoarder = new FlatDataHoarder(enQNdnEvent, enQNdnTraffic,retryPolicy);
@@ -93,6 +92,8 @@ public class InitPrefixTraffic implements NdnTraffic {
 			.setInterestLifetimeMilliseconds(10000D);
 		enQNdnEvent.enQ(new SimpleExpressInterest(rolodexInterest,
 				new DSyncRolodexDataHoarder(routeName, hoarder, syncDataRetryPolicy)));
+
+		// need to add the dsync prefix to the cache for hoard discovery.
 	}
 
     private void initChronoSyncPrefix() {

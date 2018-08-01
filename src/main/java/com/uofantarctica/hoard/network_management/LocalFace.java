@@ -46,6 +46,10 @@ public class LocalFace {
 		this.ndnEvents = ndnEvents;
 	}
 
+	public Face getFace() {
+		return face;
+	}
+
 	private void retryInit() {
 		if (isRetrying) {
 			throw new FailedReconnectionException();
@@ -75,15 +79,15 @@ public class LocalFace {
 	}
 
 	private void retryNdnEvents() {
+		for (RegisterPrefix prefixRegistration : prefixRegistrations) {
+			prefixRegistration.fire(this);
+		}
 		for (ExpressInterest expressInterest : outboundInterest) {
 			//make sure we don't have duplicates.
 			eventsToRetry.add(expressInterest);
 		}
 		for (NdnEvent ndnEvent : eventsToRetry) {
 			ndnEvent.fire(this);
-		}
-		for (RegisterPrefix prefixRegistration : prefixRegistrations) { //TODO make register prefixes first?
-			prefixRegistration.fire(this);
 		}
 		eventsToRetry.clear();
 	}

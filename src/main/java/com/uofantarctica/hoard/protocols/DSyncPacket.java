@@ -42,7 +42,7 @@ public class DSyncPacket extends SyncStateProtoPacket {
 	public NdnTraffic makeInitPrefixTraffic(SyncStateProto.SyncState s, SyncDataHoarder hoarder) {
     	Name n = getUniqueName(s);
 		return new InitPrefixTraffic(n.toString(),
-				InitPrefixTraffic.PrefixType.FLAT_CACHE_ON_INTEREST,
+				InitPrefixTraffic.PrefixType.CACHE,
 				hoarder.getEnQNdnEvent(),
 				hoarder.getEnQNdnTraffic(),
 				hoarder.getCache(),
