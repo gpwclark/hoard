@@ -31,7 +31,7 @@ means that any given NFD may or may not have certain data.
 	data that would not otherwise be proliferated across a network to be cached
 	anywhere an instance of hoard is running. This implies that across a
 	network, hoard is constantly striving for consistency (at any given node
-	trading partial consistency in favor of constant availability). The 
+	trading consistency in favor of availability). The 
 	advantages to the underlying clients hoard is serving are readily apparent
 	in the case of network partitions. Given the following topology:
 		```
