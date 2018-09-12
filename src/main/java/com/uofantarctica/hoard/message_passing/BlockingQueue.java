@@ -11,22 +11,31 @@ public class BlockingQueue<T> implements Queue<T> {
 
 	LinkedBlockingQueue<T> queue;
 	private final long timeout;
+	private final TimeUnit timeUnit;
 
 	public BlockingQueue(long timeout) {
 		this.queue = new LinkedBlockingQueue<>();
 		this.timeout = timeout;
+		this.timeUnit = TimeUnit.SECONDS;
+	}
+
+	public BlockingQueue(long timeout, TimeUnit timeUnit) {
+		this.queue = new LinkedBlockingQueue<>();
+		this.timeout = timeout;
+		this.timeUnit = timeUnit;
 	}
 
 	public BlockingQueue() {
 		this.queue = new LinkedBlockingQueue<>();
 		timeout = 5l;
+		timeUnit = TimeUnit.SECONDS;
 	}
 
 	@Override
 	public T deQ() {
 		T data = null;
 		try {
-			data = (T)this.queue.poll(timeout, TimeUnit.SECONDS);
+			data = (T)this.queue.poll(timeout, timeUnit);
 		} catch (InterruptedException e) {
 			log.error("Failed to deQ", e);
 		}

@@ -39,8 +39,8 @@ public class Main {
 	public static void main(String[] args) {
 		org.apache.log4j.Logger.getRootLogger().setLevel(Level.TRACE);
 		log.debug("Starting.");
-		NonBlockingQueue<NdnEvent> ndnEvents = new NonBlockingQueue<>();
-		BlockingQueue<NdnTraffic> ndnTraffic = new BlockingQueue<>(5l);
+		BlockingQueue<NdnEvent> ndnEvents = new BlockingQueue<>(10L, TimeUnit.MILLISECONDS);
+		BlockingQueue<NdnTraffic> ndnTraffic = new BlockingQueue<>(5L);
         Enqueue<NdnEvent> enQNdnEvent = new Enqueue(ndnEvents);
 		Dequeue<NdnEvent> deQNdnEvent = new Dequeue(ndnEvents);
 
