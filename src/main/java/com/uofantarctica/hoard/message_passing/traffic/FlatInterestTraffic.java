@@ -4,7 +4,7 @@ import net.named_data.jndn.Face;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.InterestFilter;
 import net.named_data.jndn.Name;
-import com.uofantarctica.hoard.data_management.Hoard;
+import com.uofantarctica.hoard.data_management.HoardServer;
 
 public class FlatInterestTraffic implements NdnTraffic {
 	private final Name prefix;
@@ -22,8 +22,8 @@ public class FlatInterestTraffic implements NdnTraffic {
 	}
 
 	@Override
-	public void process(Hoard hoard) {
-		hoard.processFlatInterest(prefix, interest, face, interestFilterId, filter);
+	public void process(HoardServer hoardServer) {
+		hoardServer.processFlatInterest(prefix, interest, face, interestFilterId, filter);
 	}
 
 	@Override

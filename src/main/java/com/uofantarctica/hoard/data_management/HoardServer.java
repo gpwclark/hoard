@@ -14,18 +14,18 @@ import org.slf4j.LoggerFactory;
 import com.uofantarctica.hoard.message_passing.Dequeue;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 
-public class Hoard implements Runnable {
-	private static final Logger log = LoggerFactory.getLogger(Hoard.class);
+public class HoardServer implements Runnable {
+	private static final Logger log = LoggerFactory.getLogger(HoardServer.class);
 
 	private final MemoryContentCache cache;
 	private final Enqueue<NdnEvent> ndnEvents;
 	private final Enqueue<NdnTraffic> ndnTrafficEnqueue;
 	private final Dequeue<NdnTraffic> ndnTrafficDequeue;
 
-	public Hoard(Enqueue<NdnEvent> ndnEvents,
-	             Enqueue<NdnTraffic> ndnTrafficEnqueue,
-	             MemoryContentCache cache,
-				 Dequeue<NdnTraffic> ndnTrafficDequeue) {
+	public HoardServer(Enqueue<NdnEvent> ndnEvents,
+	                   Enqueue<NdnTraffic> ndnTrafficEnqueue,
+	                   MemoryContentCache cache,
+	                   Dequeue<NdnTraffic> ndnTrafficDequeue) {
 		this.ndnEvents = ndnEvents;
 		this.ndnTrafficEnqueue = ndnTrafficEnqueue;
 		this.cache = cache;

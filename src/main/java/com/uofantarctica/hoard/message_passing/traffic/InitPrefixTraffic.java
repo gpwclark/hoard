@@ -1,7 +1,7 @@
 package com.uofantarctica.hoard.message_passing.traffic;
 
 import com.uofantarctica.hoard.data_management.CacheOnInterestListener;
-import com.uofantarctica.hoard.data_management.Hoard;
+import com.uofantarctica.hoard.data_management.HoardServer;
 import com.uofantarctica.hoard.message_passing.event.SimpleExpressInterest;
 import com.uofantarctica.hoard.network_management.ExponentialBackoff;
 import com.uofantarctica.hoard.protocols.HoardPrefixType;
@@ -23,11 +23,11 @@ public class InitPrefixTraffic implements NdnTraffic {
     private static final Logger log = LoggerFactory.getLogger(InitPrefixTraffic.class);
 
 	@Override
-	public void process(Hoard hoard) {
-		enQNdnEvent = hoard.getEnQNdnEvent();
-		enQNdnTraffic = hoard.getEnQNdnTraffic();
-		cache = hoard.getCache();
-		retryPolicy = hoard.getRetryPolicy(type);
+	public void process(HoardServer hoardServer) {
+		enQNdnEvent = hoardServer.getEnQNdnEvent();
+		enQNdnTraffic = hoardServer.getEnQNdnTraffic();
+		cache = hoardServer.getCache();
+		retryPolicy = hoardServer.getRetryPolicy(type);
 		init();
 	}
 

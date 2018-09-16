@@ -17,6 +17,7 @@ public class SendEncoding extends NdnEvent {
 		face.send(dataEncoding, name);
 	}
 
+
 	@Override
 	String getUniqueName() {
 		return SendEncoding.class.getSimpleName() + name.toUri();
@@ -27,5 +28,13 @@ public class SendEncoding extends NdnEvent {
 		return "SendEncoding{" +
 				"dataEncoding=" + dataEncoding.size() +"b" +
 				'}';
+	}
+
+	public Blob getDataEncoding() {
+		return dataEncoding;
+	}
+
+	public Name getName() {
+		return name;
 	}
 }

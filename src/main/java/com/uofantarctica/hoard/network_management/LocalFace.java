@@ -141,6 +141,7 @@ public class LocalFace {
 	public void send(Blob dataEncoding, Name name) {
 		try {
 			face.send(dataEncoding);
+			//TODO why is this added to eventsToRetry?
 			eventsToRetry.add(new SendEncoding(dataEncoding, name));
 		} catch (IOException e) {
 			log.error("Error send, IOException, retryingInit", e);

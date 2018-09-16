@@ -44,7 +44,7 @@ import com.uofantarctica.hoard.network_management.InterestListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -231,7 +231,8 @@ public class MemoryContentCache implements OnInterestCallback {
 
 	/**
 	 * Dequeue the minimum lifetime before removing stale content from the cache.
-	 * @return The minimum cache lifetime in milliseconds.
+	 * @return The minimu	public Data testCache(Data data) {
+	}m cache lifetime in milliseconds.
 	 */
 	public final double
 	getMinimumCacheLifetime() { return minimumCacheLifetime_; }
@@ -256,15 +257,39 @@ public class MemoryContentCache implements OnInterestCallback {
 		ndnTraffic.enQ(new FlatInterestTraffic(prefix, interest, face, interestFilterId, filter));
 	}
 
-	public final void processInterest(Name prefix, Interest interest, Face face, long interestFilterId, InterestFilter filter) {
-	    List<NdnEvent> events = getEvents(prefix, interest, face, interestFilterId, filter);
-		for (NdnEvent event : events) {
-			ndnEvents.enQ(event);
-		}
+	public final void processInterest(Name prefix, Interest interest, Face face, long interestFilterId,
+	                                     InterestFilter filter) {
+	    Optional<SendEncoding> datum = getDataFromInterest(interest);
+	    if (datum.isPresent()) {
+			ndnEvents.enQ(datum.get());
+	    } else {
+		    //TODO is this right?
+		    // Call the onDataNotFound callback (if defined).
+		    Object onDataNotFound = onDataNotFoundForPrefix_.get(prefix.toUri());
+		    if (onDataNotFound != null) {
+			    try {
+				    ((OnInterestCallback)onDataNotFound).onInterest(prefix, interest, face, interestFilterId, filter);
+			    } catch (Exception e) {
+				    log.error("Error in onDataNotFound", e);
+			    }
+		    }
+	    }
     }
 
-	private final List<NdnEvent> getEvents(Name prefix, Interest interest, Face face, long interestFilterId, InterestFilter filter) {
-		List<NdnEvent> events = new ArrayList<>();
+    public Optional<Data> getData(Interest interest) {
+	    Optional<Data> data;
+	    Optional<SendEncoding> datum = getDataFromInterest(interest);
+	    if (datum.isPresent()) {
+			data = Optional.of(new Data(datum.get().getName())
+					.setContent(datum.get().getDataEncoding()));
+	    }
+	    else {
+	    	data = Optional.empty();
+	    }
+	    return data;
+    }
+
+	private final Optional<SendEncoding> getDataFromInterest(Interest interest) {
 		double nowMilliseconds = System.currentTimeMillis();
 		doCleanup(nowMilliseconds);
 
@@ -294,8 +319,7 @@ public class MemoryContentCache implements OnInterestCallback {
 				&& !isFresh)) {
 				if (interest.getChildSelector() < 0) {
 					// No child selector, so send the first match that we have found.
-					events.add(new SendEncoding(content.getDataEncoding(), content.getData().getName()));
-					return events;
+					return Optional.of(new SendEncoding(content.getDataEncoding(), content.getData().getName()));
 				}
 				else {
 					// Update selectedEncoding based on the child selector.
@@ -334,21 +358,9 @@ public class MemoryContentCache implements OnInterestCallback {
 
 		if (selectedEncoding != null) {
 			// We found the leftmost or rightmost child.
-			events.add(new SendEncoding(selectedEncoding, selectedName));
+			return Optional.of(new SendEncoding(selectedEncoding, selectedName));
 		}
-		else {
-			// Call the onDataNotFound callback (if defined).
-			Object onDataNotFound = onDataNotFoundForPrefix_.get(prefix.toUri());
-			if (onDataNotFound != null) {
-				try {
-					//TODO is this right?
-					((OnInterestCallback)onDataNotFound).onInterest(prefix, interest, face, interestFilterId, filter);
-				} catch (Exception e) {
-					log.error("Error in onDataNotFound", e);
-				}
-			}
-		}
-		return events;
+		return Optional.empty();
 	}
 
 	private boolean isDataMatch(Data data, Interest interest) {

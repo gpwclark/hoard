@@ -2,11 +2,11 @@ package com.uofantarctica.hoard.network_management;
 
 import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
+import com.uofantarctica.jndn.tests.TransportConfiguration;
 import net.named_data.jndn.Face;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.security.KeyChain;
 import net.named_data.jndn.security.SafeBag;
-import net.named_data.jndn.transport.TcpTransport;
 import net.named_data.jndn.util.Blob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,10 +156,7 @@ public class FaceInit {
 	}
 
 	public static Face getRawFace() throws IOException {
-		String host = "127.0.0.1";
-		int port = 6363;
-		//Face face = new Face(host, port);
-		Face face = new Face(new TcpTransport(), new TcpTransport.ConnectionInfo(host, port));
+		Face face = TransportConfiguration.getFace();
 		SecurityData db = getSecurityData(face);
 		pumpFaceAwhile(face, 2000);
 		return face;

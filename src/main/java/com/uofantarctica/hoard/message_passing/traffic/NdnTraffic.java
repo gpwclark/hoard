@@ -1,7 +1,7 @@
 package com.uofantarctica.hoard.message_passing.traffic;
 
-import com.uofantarctica.hoard.data_management.Hoard;
+import com.uofantarctica.hoard.data_management.HoardServer;
 
 public interface NdnTraffic {
-	void process(Hoard hoard);
+	void process(HoardServer hoardServer);
 }

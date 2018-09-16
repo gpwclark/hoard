@@ -6,5 +6,5 @@ Session.vim
 .settings
 bin
 .gradle
-hoard.log
+hoardServer.log
 build

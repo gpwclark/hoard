@@ -40,14 +40,13 @@ public class DSyncPacket extends SyncStateProtoPacket {
 	//TODO do we need all of these arguments to InitPrefixTraffic?
 	@Override
 	public NdnTraffic makeInitPrefixTraffic(SyncStateProto.SyncState s, SyncDataHoarder hoarder) {
-    	Name n = getUniqueName(s);
-		return new InitPrefixTraffic(n.toString(),
-				InitPrefixTraffic.PrefixType.CACHE,
-				hoarder.getEnQNdnEvent(),
-				hoarder.getEnQNdnTraffic(),
-				hoarder.getCache(),
-				hoarder.getRetryPolicy());
-
+		Name n = getUniqueName(s);
+		HoardPrefixType.PrefixType.Builder builder = HoardPrefixType.PrefixType.newBuilder();
+		String routeName = n.toUri();
+		builder.setName(routeName)
+				.setType(HoardPrefixType.PrefixType.ActionType.CACHE);
+		HoardPrefixType.PrefixType prefixType = builder.build();
+		return new InitPrefixTraffic(prefixType);
 	}
 
 	/*

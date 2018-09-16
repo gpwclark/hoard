@@ -1,8 +1,8 @@
 package com.uofantarctica.hoard.message_passing.traffic;
 
+import com.uofantarctica.hoard.data_management.HoardServer;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
-import com.uofantarctica.hoard.data_management.Hoard;
 
 public class FlatDataTraffic implements com.uofantarctica.hoard.message_passing.traffic.NdnTraffic {
 	private final Interest interest;
@@ -13,8 +13,8 @@ public class FlatDataTraffic implements com.uofantarctica.hoard.message_passing.
 	}
 
 	@Override
-	public void process(Hoard hoard) {
-		hoard.processFlatData(interest, data);
+	public void process(HoardServer hoardServer) {
+		hoardServer.processFlatData(interest, data);
 	}
 
 	@Override

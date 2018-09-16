@@ -16,14 +16,20 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
     implementation "org.slf4j:slf4j-api:${slf4j_version}"
     implementation "org.slf4j:slf4j-log4j12:${slf4j_version}"
     implementation "net.named-data:jndn-android:${jndn_version}"
     implementation "com.uofantarctica:dsync:2.0.1"
-    compile group: 'com.netflix.astyanax', name: 'astyanax', version: '3.9.0'
+    implementation "com.uofantarctica:jndn.tests.helpers:0.1"
+    implementation "com.netflix.astyanax:astyanax:3.9.0"
+    testImplementation "com.palantir.docker.compose:docker-compose-rule-junit4:0.29.1"
+    testImplementation "junit:junit:4.12"
+    testImplementation "com.uofantarctica:jndn.tests.app:0.1"
 }
 
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
 
 apply plugin: 'maven-publish'
 
@@ -35,15 +41,9 @@ publishing {
             version '0.1'
 
             from components.java
+            artifact sourceJar {
+                classifier "sources"
+            }
         }
     }
-}
-
-task sourcesJar(type: Jar, dependsOn:classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives sourcesJar
 }

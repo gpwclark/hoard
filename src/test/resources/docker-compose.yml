@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  nfd_service:
+    build:
+      context: .
+      args:
+        - VERSION_CXX=ndn-cxx-0.6.1
+        - VERSION_NFD=NFD-0.6.1
+        - VERSION_TOOLS=ndn-tools-0.6
+    ports:
+      - "6363"
