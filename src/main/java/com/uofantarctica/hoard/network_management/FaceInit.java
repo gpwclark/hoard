@@ -2,23 +2,20 @@ package com.uofantarctica.hoard.network_management;
 
 import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
+import com.uofantarctica.jndn.helpers.FaceSecurity;
 import com.uofantarctica.jndn.helpers.TransportConfiguration;
 import net.named_data.jndn.Face;
-import net.named_data.jndn.Name;
-import net.named_data.jndn.security.KeyChain;
-import net.named_data.jndn.security.SafeBag;
-import net.named_data.jndn.util.Blob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
 
 import static com.uofantarctica.jndn.helpers.FaceSecurity.initFaceAndGetSecurityData;
 
 public class FaceInit {
 	private static final Logger log = LoggerFactory.getLogger(FaceInit.class);
+
+	private FaceSecurity.SecurityData securityData;
 
 	public static void pumpFaceAwhile(Face face, long awhile) throws IOException {
 		long startTime0 = System.currentTimeMillis();
@@ -40,16 +37,26 @@ public class FaceInit {
 
 	}
 
-	public static Face getRawFace() throws IOException {
+	public static class FaceBundle {
+		public final FaceSecurity.SecurityData securityData;
+		public final Face face;
+
+		public FaceBundle(FaceSecurity.SecurityData securityData, Face face) {
+			this.securityData = securityData;
+			this.face = face;
+		}
+	}
+
+	public static FaceBundle getRawFace() throws IOException {
 		Face face = TransportConfiguration.getFace();
-		initFaceAndGetSecurityData(face);
+		FaceSecurity.SecurityData securityData = initFaceAndGetSecurityData(face);
 		pumpFaceAwhile(face, 2000);
-		return face;
+		return new FaceBundle(securityData, face);
 	}
 
 	public static LocalFace getFace(Enqueue<NdnEvent> ndnEvents) throws IOException {
-		Face face = getRawFace();
+		FaceBundle faceBundle = getRawFace();
 		//TODO sign packets? no? provenance?
-		return new LocalFace(face, ndnEvents);
+		return new LocalFace(faceBundle, ndnEvents);
 	}
 }

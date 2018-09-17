@@ -19,7 +19,7 @@ public class SendEncoding extends NdnEvent {
 
 
 	@Override
-	String getUniqueName() {
+	public String getUniqueName() {
 		return SendEncoding.class.getSimpleName() + name.toUri();
 	}
 

@@ -1,11 +1,13 @@
 package com.uofantarctica.hoard.network_management;
 
+import com.uofantarctica.dsync.DSync;
 import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.event.PutData;
 import com.uofantarctica.hoard.message_passing.event.RegisterPrefix;
 import com.uofantarctica.hoard.message_passing.event.SendEncoding;
+import com.uofantarctica.hoard.protocols.HoardPrefixType;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Face;
 import net.named_data.jndn.ForwardingFlags;
@@ -14,6 +16,7 @@ import net.named_data.jndn.OnInterestCallback;
 import net.named_data.jndn.OnRegisterFailed;
 import net.named_data.jndn.OnRegisterSuccess;
 import net.named_data.jndn.encoding.WireFormat;
+import net.named_data.jndn.security.KeyChain;
 import net.named_data.jndn.util.Blob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,10 +38,19 @@ public class LocalFace {
 	private boolean isRetrying = false;
 	private final Set<NdnEvent> eventsToRetry = new HashSet<>();
 	private final Enqueue<NdnEvent> ndnEvents;
+	private KeyChain keyChain;
+	private Name certificateName;
+	private DSync dsync;
 
-	public LocalFace(Face face, Enqueue<NdnEvent> ndnEvents) {
-		this.face = face;
+	public LocalFace(FaceInit.FaceBundle faceBundle, Enqueue<NdnEvent> ndnEvents) {
 		this.ndnEvents = ndnEvents;
+		newFace(faceBundle);
+	}
+
+	private void newFace(FaceInit.FaceBundle faceBundle) {
+		this.face = faceBundle.face;
+		this.keyChain = faceBundle.securityData.keyChain;
+		this.certificateName = faceBundle.securityData.certificateName;
 	}
 
 	public LocalFace(Enqueue<NdnEvent> ndnEvents) {
@@ -62,7 +74,8 @@ public class LocalFace {
 				++attempts;
 				try {
 					log.debug("Retrying face evaluate");
-					face = FaceInit.getRawFace();
+					FaceInit.FaceBundle faceBundle = FaceInit.getRawFace();
+					newFace(faceBundle);
 					retryNdnEvents();
 					break;
 				}
@@ -170,5 +183,17 @@ public class LocalFace {
 		for (ExpressInterest expressInterest : outboundInterest) {
 			log.debug("Current outbound interest queue: {}", expressInterest);
 		}
+	}
+
+	public KeyChain getKeyChain() {
+		return keyChain;
+	}
+
+	public void publishFederatedEvent(HoardPrefixType.PrefixType prefixType) {
+		dsync.publishNextMessage(new Data().setContent(new Blob(prefixType.toByteArray())));
+	}
+
+	public void addDsync(DSync dsync) {
+		this.dsync = dsync;
 	}
 }

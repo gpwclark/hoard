@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public abstract class NdnEvent {
 	public abstract void fire(LocalFace face);
-	abstract String getUniqueName();
+	public abstract String getUniqueName();
 
 	@Override
 	public boolean equals(Object o) {

@@ -2,6 +2,7 @@ package com.uofantarctica.hoard.message_passing.traffic;
 
 import com.uofantarctica.hoard.data_management.CacheOnInterestListener;
 import com.uofantarctica.hoard.data_management.HoardServer;
+import com.uofantarctica.hoard.message_passing.event.FederatedEvent;
 import com.uofantarctica.hoard.message_passing.event.SimpleExpressInterest;
 import com.uofantarctica.hoard.network_management.ExponentialBackoff;
 import com.uofantarctica.hoard.protocols.HoardPrefixType;
@@ -22,6 +23,7 @@ import com.uofantarctica.hoard.data_management.SyncInterestListener;
 public class InitPrefixTraffic implements NdnTraffic {
     private static final Logger log = LoggerFactory.getLogger(InitPrefixTraffic.class);
 
+	private final HoardPrefixType.PrefixType prefixType;
     private final String routeName;
     private final HoardPrefixType.PrefixType.ActionType type;
     private Enqueue<NdnEvent> enQNdnEvent;
@@ -40,11 +42,13 @@ public class InitPrefixTraffic implements NdnTraffic {
 
 
     public InitPrefixTraffic(HoardPrefixType.PrefixType prefixType) {
+		this.prefixType = prefixType;
         this.routeName = prefixType.getName();
         this.type = prefixType.getType();
     }
 
     public void evaluate() {
+	    enQNdnEvent.enQ(new FederatedEvent(prefixType));
         switch (type) {
             case DSYNC: initDSyncPrefix();
                 break;

@@ -1,5 +1,6 @@
 package com.uofantarctica.hoard.network_management;
 
+import com.uofantarctica.dsync.DSync;
 import com.uofantarctica.hoard.HoardThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +15,10 @@ public class NdnServer implements Runnable, HoardThread {
 	private final Dequeue<NdnEvent> ndnEvents;
 
 	public NdnServer(LocalFace face,
-					 Dequeue<NdnEvent> ndnEvents) {
+	                 Dequeue<NdnEvent> ndnEvents, DSync dsync) {
 		this.face = face;
 		this.ndnEvents = ndnEvents;
+		face.addDsync(dsync);
 	}
 
 	@Override

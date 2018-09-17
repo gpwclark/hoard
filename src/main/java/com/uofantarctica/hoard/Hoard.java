@@ -35,6 +35,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.uofantarctica.jndn.helpers.FaceSecurity.initFaceAndGetSecurityData;
+
 public class Hoard implements Runnable {
 	private static final Logger log = LoggerFactory.getLogger(Hoard.class);
 
@@ -86,11 +88,7 @@ public class Hoard implements Runnable {
 		} catch (IOException e) {
 			face = new LocalFace(enQNdnEvent);
 		}
-		NdnServer network = new NdnServer(face, deQNdnEvent);
 
-		//TODO dsync needs to live in network server and the necessary ndnEvents
-		// need to be able to route to the dsync.publish method.
-		/*
 		dsync = new DSync(
 				new OnData() {
 					@Override
@@ -113,11 +111,10 @@ public class Hoard implements Runnable {
 				theBroadcastPrefix,
 				System.currentTimeMillis(),
 				face.getFace(),
-				FaceInit.getSecurityData(face.getFace()).keyChain,
+				face.getKeyChain(),
 				chatRoom,
 				screenName,
 				ReturnStrategy.EXACT);
-				*/
 		cache = new MemoryContentCache(enQNdnEvent, enQNdnTraffic);
 		/* TODO in order to work out federation, caches are going to need to be
 		 * separate by namespace, or at least tracked separately.
@@ -137,6 +134,7 @@ public class Hoard implements Runnable {
 		 * the names of data in that dataset. Interested parties need only ask for
 		 * numbered data of the datasets they're interested to  learn what to ask for.
 		 */
+		NdnServer network = new NdnServer(face, deQNdnEvent, dsync);
 		HoardServer hoardServer = new HoardServer(enQNdnEvent, enQNdnTraffic, cache, deQNdnTraffic);
 		hoardExecutor.execute(network);
 		hoardExecutor.execute(hoardServer);
@@ -170,8 +168,6 @@ public class Hoard implements Runnable {
 		// if so, and they were still in the rolodex, wouldn't we end up adding them back and rerequesting
 		// all their data, needs to be thought through more.
 		enQNdnTraffic.enQ(new InitPrefixTraffic(traffic));
-		//TODO this should be an option for enQNdnEvents... not a direct call.
-		//dsync.publishNextMessage(new Data().setContent(new Blob(traffic.toByteArray())));
 	}
 
 	public Optional<Data> testCache(Interest interest) {
