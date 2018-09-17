@@ -100,10 +100,11 @@ public class HoardTest {
 			assertTrue("Looking for interest: " + interest.toUri() + ", found no matching data.", data.isPresent());
 			log.debug("found data for interest: {}", interest.toUri());
 			uniqueInterests.add(interest);
+			log.debug("Interest: {}.", interest.getName().toUri());
 		}
 
-		assertEquals("Interest must be equal to exected number of maessages",
-				UserChatSummary.getExpectedTotalCount(numParticipants, numMessages),
+		assertEquals("Interest must be equal to expected number of maessages + 1 extra because dsync oversubscribes.",
+				UserChatSummary.getExpectedTotalCount(numParticipants, numMessages) + numParticipants,
 				uniqueInterests.size());
 	}
 }
