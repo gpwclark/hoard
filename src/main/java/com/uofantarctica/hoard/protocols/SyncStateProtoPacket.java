@@ -1,9 +1,9 @@
 package com.uofantarctica.hoard.protocols;
 
 public abstract class SyncStateProtoPacket implements SyncPacket{
-    protected com.uofantarctica.hoard.protocols.SyncStateProto.SyncStateMsg syncStateMsg;
+    protected com.uofantarctica.jndn.proto.SyncStateProto.SyncStateMsg syncStateMsg;
 
-    public SyncStateProtoPacket(com.uofantarctica.hoard.protocols.SyncStateProto.SyncStateMsg syncStateMsg) {
+    public SyncStateProtoPacket(com.uofantarctica.jndn.proto.SyncStateProto.SyncStateMsg syncStateMsg) {
         this.syncStateMsg = syncStateMsg;
     }
 
@@ -11,7 +11,7 @@ public abstract class SyncStateProtoPacket implements SyncPacket{
         return syncStateMsg.getSsCount();
     }
 
-    public com.uofantarctica.hoard.protocols.SyncStateProto.SyncState get(int i) {
+    public com.uofantarctica.jndn.proto.SyncStateProto.SyncState get(int i) {
         return syncStateMsg.getSs(i);
     }
 }

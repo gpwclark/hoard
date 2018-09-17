@@ -1,7 +1,8 @@
 package com.uofantarctica.hoard.protocols;
 
+import com.uofantarctica.jndn.proto.SyncStateProto;
 public class ProcessSyncStates {
-    public static SyncPacket build(com.uofantarctica.hoard.protocols.SyncStateProto.SyncStateMsg syncStateMsg) {
+    public static SyncPacket build(SyncStateProto.SyncStateMsg syncStateMsg) {
         SyncPacket packet = new NoOpPacket();
         if (syncStateMsg.hasProtocol()) {
             switch (syncStateMsg.getProtocol()) {

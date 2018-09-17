@@ -12,7 +12,7 @@ import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 import com.uofantarctica.hoard.protocols.ProcessSyncStates;
 import com.uofantarctica.hoard.protocols.SyncPacket;
-import com.uofantarctica.hoard.protocols.SyncStateProto;
+import com.uofantarctica.jndn.proto.SyncStateProto;
 
 import java.util.HashSet;
 import java.util.Set;

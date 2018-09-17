@@ -7,8 +7,10 @@ import com.uofantarctica.hoard.data_management.SyncDataHoarder;
 
 public interface SyncPacket {
     int getCount();
-    com.uofantarctica.hoard.protocols.SyncStateProto.SyncState get(int i);
-    NdnEvent makeExpressInterestEvent(com.uofantarctica.hoard.protocols.SyncStateProto.SyncState s, SyncDataHoarder hoarder);
-	Name getUniqueName(com.uofantarctica.hoard.protocols.SyncStateProto.SyncState s);
-	NdnTraffic makeInitPrefixTraffic(com.uofantarctica.hoard.protocols.SyncStateProto.SyncState s, SyncDataHoarder hoarder);
+    com.uofantarctica.jndn.proto.SyncStateProto.SyncState get(int i);
+    NdnEvent makeExpressInterestEvent(com.uofantarctica.jndn.proto.SyncStateProto.SyncState s, SyncDataHoarder
+		    hoarder);
+	Name getUniqueName(com.uofantarctica.jndn.proto.SyncStateProto.SyncState s);
+	NdnTraffic makeInitPrefixTraffic(com.uofantarctica.jndn.proto.SyncStateProto.SyncState s, SyncDataHoarder
+			hoarder);
 }

@@ -2,7 +2,7 @@ package com.uofantarctica.hoard.network_management;
 
 import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
-import com.uofantarctica.jndn.tests.TransportConfiguration;
+import com.uofantarctica.jndn.helpers.TransportConfiguration;
 import net.named_data.jndn.Face;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.security.KeyChain;

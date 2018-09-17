@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Hoard implements Runnable {
 	private static final Logger log = LoggerFactory.getLogger(Hoard.class);
@@ -48,6 +49,7 @@ public class Hoard implements Runnable {
 	private Enqueue<NdnTraffic> enQNdnTraffic;
 	private Dequeue<NdnTraffic> deQNdnTraffic;
 	MemoryContentCache cache;
+	private AtomicBoolean running = new AtomicBoolean(false);
 
 	public Hoard(String theDataPrefix, String theBroadcastPrefix, String chatRoom, String screenName) {
 		this.theDataPrefix = theDataPrefix;
@@ -99,6 +101,7 @@ public class Hoard implements Runnable {
 
 		//TODO dsync needs to live in network server and the necessary ndnEvents
 		// need to be able to route to the dsync.publish method.
+		/*
 		dsync = new DSync(
 				new OnData() {
 					@Override
@@ -125,6 +128,7 @@ public class Hoard implements Runnable {
 				chatRoom,
 				screenName,
 				ReturnStrategy.EXACT);
+				*/
 		cache = new MemoryContentCache(enQNdnEvent, enQNdnTraffic);
 		/* TODO in order to work out federation, caches are going to need to be
 		 * separate by namespace, or at least tracked separately.
@@ -147,15 +151,29 @@ public class Hoard implements Runnable {
 		HoardServer hoardServer = new HoardServer(enQNdnEvent, enQNdnTraffic, cache, deQNdnTraffic);
 		dataHoardExecutor.execute(hoardServer);
 
-		try {
-			ndnExecutor.shutdown();
-			while (!ndnExecutor.awaitTermination(42L, TimeUnit.DAYS)) {
-				log.debug("Not yet. Still waiting for termination");
+		while (running.get()) {
+			try {
+				Thread.sleep(5000L);
+			}
+			catch (Exception e) {
+				log.error("Error while awaiting termination.", e);
 			}
 		}
-		catch (Exception e) {
-			log.error("Error while awaiting termination", e);
-		}
+		try {
+			 ndnExecutor.shutdownNow();
+			 dataHoardExecutor.shutdownNow();
+			 /*
+			 ndnExecutor.shutdown();
+			 while (!ndnExecutor.awaitTermination(42L, TimeUnit.DAYS)) {
+				 log.debug("Not yet. Still waiting for termination.");
+			 }
+			 */
+		 }
+		 catch (Exception e) {
+			 log.error("Error while terminating hoard.", e);
+		 }
+
+		 log.debug("Hoard done running.");
 	}
 
 	public void addRoute(HoardPrefixType.PrefixType traffic) {
@@ -163,16 +181,24 @@ public class Hoard implements Runnable {
 		// if so, and they were still in the rolodex, wouldn't we end up adding them back and rerequesting
 		// all their data, needs to be thought through more.
 		enQNdnTraffic.enQ(new InitPrefixTraffic(traffic));
-		dsync.publishNextMessage(new Data().setContent(new Blob(traffic.toByteArray())));
+		//TODO this should be an option for enQNdnEvents... not a direct call.
+		//dsync.publishNextMessage(new Data().setContent(new Blob(traffic.toByteArray())));
 	}
 
 	public Optional<Data> testCache(Interest interest) {
 		return cache.getData(interest);
 	}
 
+	public void interrupt() {
+		running.set(false);
+		log.debug("Hoard thread signalled to stop running.");
+	}
+
 	@Override
 	public void run() {
+		running.set(true);
 		initQueues();
+		//TODO init should not be the method that houses the main while loop.
 		init();
 	}
 }

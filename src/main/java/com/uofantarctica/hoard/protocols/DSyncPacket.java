@@ -7,6 +7,7 @@ import net.named_data.jndn.Name;
 import com.uofantarctica.hoard.data_management.SyncDataHoarder;
 import com.uofantarctica.hoard.message_passing.event.ExpressIncrementingInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
+import com.uofantarctica.jndn.proto.SyncStateProto;
 
 public class DSyncPacket extends SyncStateProtoPacket {
     public DSyncPacket(SyncStateProto.SyncStateMsg syncStateMsg) {
@@ -14,9 +15,7 @@ public class DSyncPacket extends SyncStateProtoPacket {
     }
 
 	public Name makeExpressInterestName(SyncStateProto.SyncState s) {
-		Name n = new Name(s.getName())
-				.append(ReturnStrategy.EXACT.toString())
-				.append(Long.toString(s.getSeqno().getSession()))
+		Name n =  getUniqueName(s)
 				// since this is a dsync packet we start fetching at 0 and continue ad infinitum.
 				// since we are starting to fetch this producer's data we must start at the 0th bit.
 				.append(Long.toString(0L));

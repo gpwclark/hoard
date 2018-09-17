@@ -18,9 +18,10 @@ repositories {
 dependencies {
     implementation "org.slf4j:slf4j-api:${slf4j_version}"
     implementation "org.slf4j:slf4j-log4j12:${slf4j_version}"
-    implementation "net.named-data:jndn-android:${jndn_version}"
+    implementation "net.named-data:jndn:${jndn_version}"
     implementation "com.uofantarctica:dsync:2.0.1"
-    implementation "com.uofantarctica:jndn.tests.helpers:0.1"
+    implementation "com.uofantarctica:jndn.helpers:0.1"
+    implementation "com.uofantarctica:jndn.proto:0.1"
     implementation "com.netflix.astyanax:astyanax:3.9.0"
     testImplementation "com.palantir.docker.compose:docker-compose-rule-junit4:0.29.1"
     testImplementation "junit:junit:4.12"

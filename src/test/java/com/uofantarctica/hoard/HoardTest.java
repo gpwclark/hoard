@@ -7,8 +7,8 @@ import com.uofantarctica.hoard.protocols.HoardPrefixType;
 import com.uofantarctica.jndn.tests.chat.ChatSimulation;
 import com.uofantarctica.jndn.tests.chat.ChatSimulationBuilder;
 import com.uofantarctica.jndn.tests.chat.UserChatSummary;
-import com.uofantarctica.jndn.tests.sync.DockerTcpTransportFactory;
-import com.uofantarctica.jndn.tests.sync.TransportConfiguration;
+import com.uofantarctica.jndn.helpers.DockerTcpTransportFactory;
+import com.uofantarctica.jndn.helpers.TransportConfiguration;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.encoding.WireFormat;
@@ -16,12 +16,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
 public class HoardTest {
+	private static final Logger log = LoggerFactory.getLogger(HoardTest.class);
 
 	final static String NFD_SERVICE = "nfd_service";
 	final int INTERNAL_PORT = 6363;
@@ -32,6 +37,7 @@ public class HoardTest {
 	UserChatSummary summary = null;
 	ChatSimulation simulation;
 	Hoard hoard;
+	Thread hoardThread;
 
 	@ClassRule
 	public static DockerComposeRule docker = DockerComposeRule.builder()
@@ -48,25 +54,18 @@ public class HoardTest {
 		host = nfd.getIp();
 		port = nfd.getExternalPort();
 		TransportConfiguration.setTransportFactory(new DockerTcpTransportFactory(host, port));
-	}
 
-
-	@After
-	public void tearDown() throws Exception {
-		docker.containers().container(NFD_SERVICE).stop();
-	}
-
-	@Test
-	public void testCache() {
 		String screenName = "scratchy";
-		String hubPrefix = "ndn/broadcast/hoard-chat";
+		String hubPrefix = "ndn/broadcast/data-namespace";
 		String defaultChatRoom = "ndnchat";
 		String chatRoom = defaultChatRoom;
-		String broadcastBaseName = "/ndn/broadcast/sync-simulation-test";
+		String broadcastBaseName = "/ndn/broadcast/sync-namespace";
 
 		hoard = Main.startDefaultHoard();
+		hoardThread = new Thread(hoard);
+		hoardThread.start();
 		HoardPrefixType.PrefixType.Builder prefixBuilder = HoardPrefixType.PrefixType.newBuilder();
-		String routeName = hubPrefix + "/" + defaultChatRoom;
+		String routeName = broadcastBaseName + "/" + defaultChatRoom;
 
 		prefixBuilder.setName(routeName)
 				.setType(HoardPrefixType.PrefixType.ActionType.DSYNC);
@@ -83,13 +82,28 @@ public class HoardTest {
 				.withNumParticipants(numParticipants);
 		simulation = builder.build();
 		summary = simulation.simulate();
+	}
+
+
+	@After
+	public void tearDown() throws Exception {
+		docker.containers().container(NFD_SERVICE).stop();
+		hoard.interrupt();
+	}
+
+	@Test
+	public void testCache() {
+		log.debug("Running testcache");
+		Set<Interest> uniqueInterests = new HashSet<>();
 		for (Interest interest : simulation.getAllInterests()) {
 			Optional<Data> data = hoard.testCache(interest);
-			assertTrue("Every interest expressed should be in the hoard data cache", data.isPresent());
+			assertTrue("Looking for interest: " + interest.toUri() + ", found no matching data.", data.isPresent());
+			log.debug("found data for interest: {}", interest.toUri());
+			uniqueInterests.add(interest);
 		}
 
 		assertEquals("Interest must be equal to exected number of maessages",
 				UserChatSummary.getExpectedTotalCount(numParticipants, numMessages),
-				simulation.getAllInterests().size());
+				uniqueInterests.size());
 	}
 }

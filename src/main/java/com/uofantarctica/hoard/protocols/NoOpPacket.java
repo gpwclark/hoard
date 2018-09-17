@@ -4,6 +4,7 @@ import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 import net.named_data.jndn.Name;
 import com.uofantarctica.hoard.data_management.SyncDataHoarder;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
+import com.uofantarctica.jndn.proto.SyncStateProto;
 
 public class NoOpPacket implements SyncPacket {
 	@Override
@@ -12,7 +13,7 @@ public class NoOpPacket implements SyncPacket {
 	}
 
 	@Override
-	public com.uofantarctica.hoard.protocols.SyncStateProto.SyncState get(int i) {
+	public SyncStateProto.SyncState get(int i) {
 		return null;
 	}
 
@@ -22,7 +23,7 @@ public class NoOpPacket implements SyncPacket {
 	}
 
 	@Override
-	public Name getUniqueName(com.uofantarctica.hoard.protocols.SyncStateProto.SyncState s) {
+	public Name getUniqueName(SyncStateProto.SyncState s) {
 		return null;
 	}
 
