@@ -61,7 +61,7 @@ public class LocalFace {
 			do {
 				++attempts;
 				try {
-					log.debug("Retrying face init");
+					log.debug("Retrying face evaluate");
 					face = FaceInit.getRawFace();
 					retryNdnEvents();
 					break;
@@ -72,7 +72,7 @@ public class LocalFace {
 				catch (Exception e) {
 					log.error("Failed in retrying face", e);
 				}
-				log.debug("Retrying face init, attempt: {}", attempts);
+				log.debug("Retrying face evaluate, attempt: {}", attempts);
 			} while(retryFacePolicy.sleepingRetry());
 			isRetrying = false;
 		}
@@ -118,7 +118,7 @@ public class LocalFace {
 		try {
 			face.processEvents();
 		} catch (IOException e) {
-			log.error("Failed to processEvents, IOException, retrying init",e);
+			log.error("Failed to processEvents, IOException, retrying evaluate",e);
 			retryInit();
 		} catch (Exception e) {
 			log.error("Failed to processEvents",e);

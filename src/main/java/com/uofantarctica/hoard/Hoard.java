@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -68,28 +69,17 @@ public class Hoard implements Runnable {
 	}
 
 	private void init() {
-		//TODO there is NO reason to have TWO executor services.
-		ExecutorService dataHoardExecutor = Executors.newFixedThreadPool(1,
+		ExecutorService hoardExecutor = Executors.newFixedThreadPool(2,
 				new ThreadFactory() {
 					@Override
 					public Thread newThread(Runnable runnable) {
 						Thread t = new Thread(runnable);
 						t.setDaemon(true);
-						t.setName("HoardServer");
+						t.setName("hoard-" + UUID.randomUUID().toString());
 						return t;
 					}
 				});
 
-		ExecutorService ndnExecutor = Executors.newFixedThreadPool(1,
-				new ThreadFactory() {
-					@Override
-					public Thread newThread(Runnable runnable) {
-						Thread t = new Thread(runnable);
-						t.setDaemon(true);
-						t.setName("NdnServer");
-						return t;
-					}
-				});
 		LocalFace face = null;
 		try {
 			face = FaceInit.getFace(enQNdnEvent);
@@ -97,7 +87,6 @@ public class Hoard implements Runnable {
 			face = new LocalFace(enQNdnEvent);
 		}
 		NdnServer network = new NdnServer(face, deQNdnEvent);
-		ndnExecutor.execute(network);
 
 		//TODO dsync needs to live in network server and the necessary ndnEvents
 		// need to be able to route to the dsync.publish method.
@@ -140,7 +129,7 @@ public class Hoard implements Runnable {
 		 * communicate the names of their non-sync data, so the other knows what to ask
 		 * for. This means that hoardServer will use one dsync prefix internally for different
 		 * federated behavior. The first dsync prefix, /hoardServer/prefix_types/. communicates
-		 * the various calls to init prefix that instance of hoardServer has been given. Each one
+		 * the various calls to evaluate prefix that instance of hoardServer has been given. Each one
 		 * is it's own datum. Instances of hoardServer communicate this data to each other and
 		 * decide whether or not to opt in to its collection. Once a given prefix has
 		 * been selected, it's data collection begins. If it is not sync data, this
@@ -149,7 +138,8 @@ public class Hoard implements Runnable {
 		 * numbered data of the datasets they're interested to  learn what to ask for.
 		 */
 		HoardServer hoardServer = new HoardServer(enQNdnEvent, enQNdnTraffic, cache, deQNdnTraffic);
-		dataHoardExecutor.execute(hoardServer);
+		hoardExecutor.execute(network);
+		hoardExecutor.execute(hoardServer);
 
 		while (running.get()) {
 			try {
@@ -160,8 +150,7 @@ public class Hoard implements Runnable {
 			}
 		}
 		try {
-			 ndnExecutor.shutdownNow();
-			 dataHoardExecutor.shutdownNow();
+			 hoardExecutor.shutdownNow();
 			 /*
 			 ndnExecutor.shutdown();
 			 while (!ndnExecutor.awaitTermination(42L, TimeUnit.DAYS)) {
@@ -198,7 +187,7 @@ public class Hoard implements Runnable {
 	public void run() {
 		running.set(true);
 		initQueues();
-		//TODO init should not be the method that houses the main while loop.
+		//TODO evaluate should not be the method that houses the main while loop.
 		init();
 	}
 }

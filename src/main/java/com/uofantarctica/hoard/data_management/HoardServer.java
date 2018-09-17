@@ -1,5 +1,6 @@
 package com.uofantarctica.hoard.data_management;
 
+import com.uofantarctica.hoard.HoardThread;
 import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.network_management.ExponentialBackoff;
@@ -14,9 +15,10 @@ import org.slf4j.LoggerFactory;
 import com.uofantarctica.hoard.message_passing.Dequeue;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 
-public class HoardServer implements Runnable {
+public class HoardServer implements Runnable, HoardThread {
 	private static final Logger log = LoggerFactory.getLogger(HoardServer.class);
 
+	private static final String HOARD_SERVER = "HOARD_SERVER";
 	private final MemoryContentCache cache;
 	private final Enqueue<NdnEvent> ndnEvents;
 	private final Enqueue<NdnTraffic> ndnTrafficEnqueue;
@@ -75,5 +77,10 @@ public class HoardServer implements Runnable {
 		ExponentialBackoff retryPolicy =
 				new ExponentialBackoff(5000, 120000, -1);
 		return retryPolicy;
+	}
+
+	@Override
+	public String getName() {
+		return HOARD_SERVER;
 	}
 }

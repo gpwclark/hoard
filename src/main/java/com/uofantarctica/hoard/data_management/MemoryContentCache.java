@@ -55,6 +55,7 @@ import java.util.Set;
  * http://named-data.net/doc/ndn-ccl-api/memory-content-cache.html .
  */
 public class MemoryContentCache implements OnInterestCallback {
+	//TODO optimize memory content cache with kv store.
 	private static final Logger log = LoggerFactory.getLogger(MemoryContentCache.class);
 	private final Enqueue<NdnEvent> ndnEvents;
 	private final Enqueue<NdnTraffic> ndnTraffic;
@@ -89,6 +90,7 @@ public class MemoryContentCache implements OnInterestCallback {
 	private void
 	construct()
 	{
+		log.debug("construct new MemoryContentCache.");
 		nextCleanupTime_ = System.currentTimeMillis() + cleanupIntervalMilliseconds_;
 
 		storePendingInterestCallback_ = new OnInterestCallback() {
@@ -146,9 +148,7 @@ public class MemoryContentCache implements OnInterestCallback {
 	 * @param data The Data packet object to put in the cache. This copies the
 	 * fields from the object.
 	 */
-	public final void
-	add(Data data)
-	{
+	public final void add(Data data) {
 		log.debug("add data: {}", data.getName().toUri());
 		double nowMilliseconds = System.currentTimeMillis();
 		doCleanup(nowMilliseconds);
@@ -257,7 +257,7 @@ public class MemoryContentCache implements OnInterestCallback {
 		ndnTraffic.enQ(new FlatInterestTraffic(prefix, interest, face, interestFilterId, filter));
 	}
 
-	public final void processInterest(Name prefix, Interest interest, Face face, long interestFilterId,
+	public void processInterest(Name prefix, Interest interest, Face face, long interestFilterId,
 	                                     InterestFilter filter) {
 	    Optional<SendEncoding> datum = getDataFromInterest(interest);
 	    if (datum.isPresent()) {
@@ -289,7 +289,7 @@ public class MemoryContentCache implements OnInterestCallback {
 	    return data;
     }
 
-	private final Optional<SendEncoding> getDataFromInterest(Interest interest) {
+	private Optional<SendEncoding> getDataFromInterest(Interest interest) {
 		double nowMilliseconds = System.currentTimeMillis();
 		doCleanup(nowMilliseconds);
 

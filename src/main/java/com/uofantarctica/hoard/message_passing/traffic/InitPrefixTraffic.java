@@ -22,15 +22,6 @@ import com.uofantarctica.hoard.data_management.SyncInterestListener;
 public class InitPrefixTraffic implements NdnTraffic {
     private static final Logger log = LoggerFactory.getLogger(InitPrefixTraffic.class);
 
-	@Override
-	public void process(HoardServer hoardServer) {
-		enQNdnEvent = hoardServer.getEnQNdnEvent();
-		enQNdnTraffic = hoardServer.getEnQNdnTraffic();
-		cache = hoardServer.getCache();
-		retryPolicy = hoardServer.getRetryPolicy(type);
-		init();
-	}
-
     private final String routeName;
     private final HoardPrefixType.PrefixType.ActionType type;
     private Enqueue<NdnEvent> enQNdnEvent;
@@ -38,12 +29,22 @@ public class InitPrefixTraffic implements NdnTraffic {
     private MemoryContentCache cache;
     private ExponentialBackoff retryPolicy;
 
+	@Override
+	public void process(HoardServer hoardServer) {
+		enQNdnEvent = hoardServer.getEnQNdnEvent();
+		enQNdnTraffic = hoardServer.getEnQNdnTraffic();
+		cache = hoardServer.getCache();
+		retryPolicy = hoardServer.getRetryPolicy(type);
+		evaluate();
+	}
+
+
     public InitPrefixTraffic(HoardPrefixType.PrefixType prefixType) {
         this.routeName = prefixType.getName();
         this.type = prefixType.getType();
     }
 
-    public void init() {
+    public void evaluate() {
         switch (type) {
             case DSYNC: initDSyncPrefix();
                 break;
