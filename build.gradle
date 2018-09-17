@@ -25,7 +25,7 @@ dependencies {
     implementation "com.netflix.astyanax:astyanax:3.9.0"
     testImplementation "com.palantir.docker.compose:docker-compose-rule-junit4:0.29.1"
     testImplementation "junit:junit:4.12"
-    testImplementation "com.uofantarctica:jndn.tests.app:0.1"
+    testImplementation "com.uofantarctica:jndn.sync-test-framework:0.1"
 }
 
 task sourceJar(type: Jar) {
