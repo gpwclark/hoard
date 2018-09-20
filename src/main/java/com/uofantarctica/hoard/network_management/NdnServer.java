@@ -1,7 +1,7 @@
 package com.uofantarctica.hoard.network_management;
-
-import com.uofantarctica.dsync.DSync;
 import com.uofantarctica.hoard.HoardThread;
+import com.uofantarctica.hoard.message_passing.Enqueue;
+import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.uofantarctica.hoard.message_passing.Dequeue;
@@ -12,21 +12,23 @@ public class NdnServer implements Runnable, HoardThread {
 	private static final String NDN_SERVER = "NDN_SERVER";
 
 	private final LocalFace face;
-	private final Dequeue<NdnEvent> ndnEvents;
+	private final Dequeue<NdnEvent> deQNdnEvents;
+	private final Enqueue<NdnTraffic> enQNdnTraffic;
 
 	public NdnServer(LocalFace face,
-	                 Dequeue<NdnEvent> ndnEvents, DSync dsync) {
+									 Dequeue<NdnEvent> deQNdnEvents, Enqueue<NdnTraffic> enQNdnTraffic) {
 		this.face = face;
-		this.ndnEvents = ndnEvents;
-		face.addDsync(dsync);
+		this.deQNdnEvents = deQNdnEvents;
+		this.enQNdnTraffic = enQNdnTraffic;
 	}
 
 	@Override
 	public void run() {
 	    while (true) {
-	        try {
-                face.processEvents();
-                checkForNewNdnEvents();
+			try {
+				startDsync();
+				face.processEvents();
+				checkForNewNdnEvents();
 			}
 			catch(Exception e) {
 	            log.error("Error in ndn server loop.", e);
@@ -34,12 +36,16 @@ public class NdnServer implements Runnable, HoardThread {
 		}
 	}
 
+	private void startDsync() {
+		face.startDsync(enQNdnTraffic);
+	}
+
 	private void checkForNewNdnEvents() {
-		NdnEvent newNdnEvent = ndnEvents.deQ();
+		NdnEvent newNdnEvent = deQNdnEvents.deQ();
 		while (newNdnEvent != null) {
 			newNdnEvent.fire(face);
 			log.debug("Processing NdnEvents: {} ", newNdnEvent);
-			newNdnEvent = ndnEvents.deQ();
+			newNdnEvent = deQNdnEvents.deQ();
 		}
 	}
 

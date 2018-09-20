@@ -23,7 +23,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 public class HoardTest {
 	private static final Logger log = LoggerFactory.getLogger(HoardTest.class);

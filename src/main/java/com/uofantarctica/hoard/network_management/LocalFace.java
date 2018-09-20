@@ -1,22 +1,29 @@
 package com.uofantarctica.hoard.network_management;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.uofantarctica.dsync.DSync;
+import com.uofantarctica.dsync.model.ReturnStrategy;
 import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.event.PutData;
 import com.uofantarctica.hoard.message_passing.event.RegisterPrefix;
 import com.uofantarctica.hoard.message_passing.event.SendEncoding;
+import com.uofantarctica.hoard.message_passing.traffic.InitPrefixTraffic;
+import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 import com.uofantarctica.hoard.protocols.HoardPrefixType;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Face;
 import net.named_data.jndn.ForwardingFlags;
+import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
+import net.named_data.jndn.OnData;
 import net.named_data.jndn.OnInterestCallback;
 import net.named_data.jndn.OnRegisterFailed;
 import net.named_data.jndn.OnRegisterSuccess;
 import net.named_data.jndn.encoding.WireFormat;
 import net.named_data.jndn.security.KeyChain;
+import net.named_data.jndn.sync.ChronoSync2013;
 import net.named_data.jndn.util.Blob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +48,10 @@ public class LocalFace {
 	private KeyChain keyChain;
 	private Name certificateName;
 	private DSync dsync;
+	private String theDataPrefix;
+	private String theBroadcastPrefix;
+	private String chatRoom;;
+	private String screenName;
 
 	public LocalFace(FaceInit.FaceBundle faceBundle, Enqueue<NdnEvent> ndnEvents) {
 		this.ndnEvents = ndnEvents;
@@ -193,7 +204,39 @@ public class LocalFace {
 		dsync.publishNextMessage(new Data().setContent(new Blob(prefixType.toByteArray())));
 	}
 
-	public void addDsync(DSync dsync) {
-		this.dsync = dsync;
+	public void startDsync(Enqueue<NdnTraffic> enQNdnTraffic) {
+		this.dsync = new DSync(
+				new OnData() {
+					@Override
+					public void onData(Interest interest, Data data) {
+						try {
+							HoardPrefixType.PrefixType prefixType = HoardPrefixType.PrefixType.parseFrom(data.getContent().getImmutableArray());
+							enQNdnTraffic.enQ(new InitPrefixTraffic(prefixType));
+						} catch (InvalidProtocolBufferException e) {
+							log.error("failed to decode hoardServer prefix type: {}", data.getName().toUri());
+						}
+					}
+				},
+				new ChronoSync2013.OnInitialized() {
+					@Override
+					public void onInitialized() {
+						log.debug("HoardServer prefix discovery dsync route initialized.");
+					}
+				},
+				theDataPrefix,
+				theBroadcastPrefix,
+				System.currentTimeMillis(),
+				getFace(),
+				getKeyChain(),
+				chatRoom,
+				screenName,
+				ReturnStrategy.EXACT);
+	}
+
+	public void initHoardFederation(String theDataPrefix, String theBroadcastPrefix, String chatRoom, String screenName) {
+		this.theDataPrefix = theDataPrefix;
+		this.theBroadcastPrefix = theBroadcastPrefix;
+		this.chatRoom = chatRoom;
+		this.screenName = screenName;
 	}
 }

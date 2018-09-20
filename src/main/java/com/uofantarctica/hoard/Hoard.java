@@ -89,32 +89,8 @@ public class Hoard implements Runnable {
 			face = new LocalFace(enQNdnEvent);
 		}
 
-		dsync = new DSync(
-				new OnData() {
-					@Override
-					public void onData(Interest interest, Data data) {
-						try {
-							HoardPrefixType.PrefixType prefixType = HoardPrefixType.PrefixType.parseFrom(data.getContent().getImmutableArray());
-							enQNdnTraffic.enQ(new InitPrefixTraffic(prefixType));
-						} catch (InvalidProtocolBufferException e) {
-							log.error("failed to decode hoardServer prefix type: {}", data.getName().toUri());
-						}
-					}
-				},
-				new ChronoSync2013.OnInitialized() {
-					@Override
-					public void onInitialized() {
-						log.debug("HoardServer prefix discovery dsync route initialized.");
-					}
-				},
-				theDataPrefix,
-				theBroadcastPrefix,
-				System.currentTimeMillis(),
-				face.getFace(),
-				face.getKeyChain(),
-				chatRoom,
-				screenName,
-				ReturnStrategy.EXACT);
+		face.initHoardFederation(theDataPrefix, theBroadcastPrefix, chatRoom, screenName);
+
 		cache = new MemoryContentCache(enQNdnEvent, enQNdnTraffic);
 		/* TODO in order to work out federation, caches are going to need to be
 		 * separate by namespace, or at least tracked separately.
@@ -134,7 +110,7 @@ public class Hoard implements Runnable {
 		 * the names of data in that dataset. Interested parties need only ask for
 		 * numbered data of the datasets they're interested to  learn what to ask for.
 		 */
-		NdnServer network = new NdnServer(face, deQNdnEvent, dsync);
+		NdnServer network = new NdnServer(face, deQNdnEvent, enQNdnTraffic);
 		HoardServer hoardServer = new HoardServer(enQNdnEvent, enQNdnTraffic, cache, deQNdnTraffic);
 		hoardExecutor.execute(network);
 		hoardExecutor.execute(hoardServer);
