@@ -34,7 +34,7 @@ public class SyncDataHoarder extends DataHoarder {
 	}
 
 	public Enqueue<NdnEvent> getEnQNdnEvent() {
-		return ndnEvents;
+		return enQNdnEvents;
 	}
 
 	public Enqueue<NdnTraffic> getEnQNdnTraffic() {
@@ -68,7 +68,7 @@ public class SyncDataHoarder extends DataHoarder {
 			Name uniqueName = packet.getUniqueName(s);
 			if (!isKnownSyncName(uniqueName)) {
 				//Name n = packet.makeExpressInterestName(s);
-				ndnEvents.enQ(packet.makeExpressInterestEvent(s, this));
+				enQNdnEvents.enQ(packet.makeExpressInterestEvent(s, this));
 				ndnTraffic.enQ(packet.makeInitPrefixTraffic(s, this));
 				addSyncName(uniqueName);
 			}
@@ -93,7 +93,7 @@ public class SyncDataHoarder extends DataHoarder {
 	}
 
 	public Enqueue<NdnEvent> getNdnEvents() {
-		return ndnEvents;
+		return enQNdnEvents;
 	}
 
 	public Enqueue<NdnTraffic> getNdnTraffic() {

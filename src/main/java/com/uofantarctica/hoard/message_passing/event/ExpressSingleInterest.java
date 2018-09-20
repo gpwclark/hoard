@@ -4,33 +4,30 @@ import com.uofantarctica.hoard.data_management.DataHoarder;
 import net.named_data.jndn.Interest;
 import com.uofantarctica.hoard.network_management.LocalFace;
 
-public class ExpressDelayedInterest extends ExpressInterest {
-	private final Runnable delayedNdnEvent;
-	private final double delay;
+public class ExpressSingleInterest extends ExpressInterest {
 	private final Interest interest;
+	private final DataHoarder dataHoarder;
 
-	public ExpressDelayedInterest(Runnable delayedNdnEvent, double delay, Interest interest, DataHoarder hoarder) {
+	public ExpressSingleInterest(Interest interest, DataHoarder hoarder) {
 		super(interest, hoarder);
-		this.delayedNdnEvent = delayedNdnEvent;
-		this.delay = delay;
 		this.interest = interest;
+		this.dataHoarder = hoarder;
 	}
 
 	@Override
 	public void fire(LocalFace face) {
-		face.callLater(delay, delayedNdnEvent);
+		face.expressInterest(this);
 	}
 
 	@Override
 	public String getUniqueName() {
-		return SimpleExpressInterest.class.getSimpleName() + interest.getName().toUri();
+		return ExpressSingleInterest.class.getSimpleName() + interest.getName().toUri();
 	}
 
 	@Override
 	public String toString() {
-		return "ExpressDelayedInterest{" +
+		return "ExpressSingleInterest{" +
 				", interest=" + interest.toUri() +
-				", delay=" + delay +
 				'}';
 	}
 }

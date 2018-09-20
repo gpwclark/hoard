@@ -34,7 +34,7 @@ public class IncrementingDataHoarder extends DataHoarder {
 		++currentSegment;
 		Name nextDataName = new Name(dsyncProducerPrefix)
 				.append(Long.toString(currentSegment));
-		ndnEvents.enQ(new SimpleExpressInterest(new Interest(nextDataName), this));
+		enQNdnEvents.enQ(new SimpleExpressInterest(new Interest(nextDataName), this));
 	}
 
 	@Override

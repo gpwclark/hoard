@@ -1,32 +1,27 @@
 package com.uofantarctica.hoard;
 
-import com.uofantarctica.dsync.model.ReturnStrategy;
+import com.uofantarctica.hoard.message_passing.BlockOnTimerAndDelayQueue;
+import com.uofantarctica.hoard.message_passing.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.uofantarctica.dsync.DSync;
 import com.uofantarctica.hoard.data_management.HoardServer;
 import com.uofantarctica.hoard.protocols.HoardPrefixType;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
-import net.named_data.jndn.OnData;
-import net.named_data.jndn.sync.ChronoSync2013;
-import net.named_data.jndn.util.Blob;
 import com.uofantarctica.hoard.message_passing.Dequeue;
 import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 import com.uofantarctica.hoard.message_passing.traffic.InitPrefixTraffic;
 import com.uofantarctica.hoard.data_management.MemoryContentCache;
-import com.uofantarctica.hoard.message_passing.BlockingQueue;
+import com.uofantarctica.hoard.message_passing.BlockOnTimerQueue;
 import com.uofantarctica.hoard.network_management.FaceInit;
 import com.uofantarctica.hoard.network_management.LocalFace;
 import com.uofantarctica.hoard.network_management.NdnServer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -34,8 +29,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static com.uofantarctica.jndn.helpers.FaceSecurity.initFaceAndGetSecurityData;
 
 public class Hoard implements Runnable {
 	private static final Logger log = LoggerFactory.getLogger(Hoard.class);
@@ -45,8 +38,8 @@ public class Hoard implements Runnable {
 	private final String chatRoom;
 	private final String screenName;
 	private DSync dsync;
-	private BlockingQueue<NdnEvent> ndnEvents;
-	private BlockingQueue<NdnTraffic> ndnTraffic;
+	private Queue<NdnEvent> ndnEvents;
+	private Queue<NdnTraffic> ndnTraffic;
 	private Enqueue<NdnEvent> enQNdnEvent;
 	private Dequeue<NdnEvent> deQNdnEvent;
 	private Enqueue<NdnTraffic> enQNdnTraffic;
@@ -62,8 +55,9 @@ public class Hoard implements Runnable {
 	}
 
 	private void initQueues() {
-		ndnEvents = new BlockingQueue<>(10L, TimeUnit.MILLISECONDS);
-		ndnTraffic = new BlockingQueue<>(5L, TimeUnit.SECONDS);
+		//TODO rename traffic and event to net and event.
+		ndnEvents = new BlockOnTimerAndDelayQueue<>(10L, TimeUnit.MILLISECONDS);
+		ndnTraffic = new BlockOnTimerQueue<>(5L, TimeUnit.SECONDS);
 		enQNdnEvent = new Enqueue(ndnEvents);
 		deQNdnEvent = new Dequeue(ndnEvents);
 		enQNdnTraffic = new Enqueue(ndnTraffic);
@@ -84,9 +78,9 @@ public class Hoard implements Runnable {
 
 		LocalFace face = null;
 		try {
-			face = FaceInit.getFace(enQNdnEvent);
+			face = FaceInit.getFace();
 		} catch (IOException e) {
-			face = new LocalFace(enQNdnEvent);
+			face = new LocalFace();
 		}
 
 		cache = new MemoryContentCache(enQNdnEvent, enQNdnTraffic);

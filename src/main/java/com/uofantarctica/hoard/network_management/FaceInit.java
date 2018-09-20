@@ -54,9 +54,9 @@ public class FaceInit {
 		return new FaceBundle(securityData, face);
 	}
 
-	public static LocalFace getFace(Enqueue<NdnEvent> ndnEvents) throws IOException {
+	public static LocalFace getFace() throws IOException {
 		FaceBundle faceBundle = getRawFace();
 		//TODO sign packets? no? provenance?
-		return new LocalFace(faceBundle, ndnEvents);
+		return new LocalFace(faceBundle);
 	}
 }

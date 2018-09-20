@@ -1,29 +1,22 @@
 package com.uofantarctica.hoard.network_management;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.uofantarctica.dsync.DSync;
-import com.uofantarctica.dsync.model.ReturnStrategy;
+import com.uofantarctica.hoard.message_passing.DelayedNdnEvent;
 import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.event.PutData;
 import com.uofantarctica.hoard.message_passing.event.RegisterPrefix;
 import com.uofantarctica.hoard.message_passing.event.SendEncoding;
-import com.uofantarctica.hoard.message_passing.traffic.InitPrefixTraffic;
-import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 import com.uofantarctica.hoard.protocols.HoardPrefixType;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Face;
 import net.named_data.jndn.ForwardingFlags;
-import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
-import net.named_data.jndn.OnData;
 import net.named_data.jndn.OnInterestCallback;
 import net.named_data.jndn.OnRegisterFailed;
 import net.named_data.jndn.OnRegisterSuccess;
 import net.named_data.jndn.encoding.WireFormat;
 import net.named_data.jndn.security.KeyChain;
-import net.named_data.jndn.sync.ChronoSync2013;
 import net.named_data.jndn.util.Blob;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,13 +37,12 @@ public class LocalFace {
 	private final ExponentialBackoff retryFacePolicy = new ExponentialBackoff(10, 120000, -1);
 	private boolean isRetrying = false;
 	private final Set<NdnEvent> eventsToRetry = new HashSet<>();
-	private final Enqueue<NdnEvent> ndnEvents;
 	private KeyChain keyChain;
 	private Name certificateName;
 	private FederationProtocol federationProtocol;
 
-	public LocalFace(FaceInit.FaceBundle faceBundle, Enqueue<NdnEvent> ndnEvents) {
-		this.ndnEvents = ndnEvents;
+	//TODO add ability to remove prefix.
+	public LocalFace(FaceInit.FaceBundle faceBundle) {
 		newFace(faceBundle);
 	}
 
@@ -60,9 +52,8 @@ public class LocalFace {
 		this.certificateName = faceBundle.securityData.certificateName;
 	}
 
-	public LocalFace(Enqueue<NdnEvent> ndnEvents) {
+	public LocalFace() {
 		retryInit();
-		this.ndnEvents = ndnEvents;
 	}
 
 	public Face getFace() {
@@ -167,11 +158,6 @@ public class LocalFace {
 			log.error("Error send, IOException, retryingInit", e);
 			retryInit();
 		}
-	}
-
-	//TODO handle without face, the events it tracks will die on reconnection.
-	public void callLater(double delay, Runnable action) {
-		face.callLater(delay, action);
 	}
 
 	public void trackOutboundInterest(ExpressInterest expressInterest) {

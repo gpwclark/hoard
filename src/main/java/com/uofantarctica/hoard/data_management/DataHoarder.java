@@ -1,5 +1,8 @@
 package com.uofantarctica.hoard.data_management;
 
+import com.uofantarctica.hoard.message_passing.DelayedNdnEvent;
+import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
+import com.uofantarctica.hoard.message_passing.event.ExpressSingleInterest;
 import com.uofantarctica.hoard.message_passing.event.SimpleExpressInterest;
 import com.uofantarctica.hoard.network_management.ExponentialBackoff;
 import net.named_data.jndn.Data;
@@ -12,20 +15,19 @@ import net.named_data.jndn.OnTimeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.uofantarctica.hoard.message_passing.Enqueue;
-import com.uofantarctica.hoard.message_passing.event.ExpressDelayedInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.traffic.NdnTraffic;
 
 public abstract class DataHoarder implements OnData, OnTimeout, OnNetworkNack {
     private static final Logger log = LoggerFactory.getLogger(DataHoarder.class);
 
-    protected final Enqueue<NdnEvent> ndnEvents;
+    protected final Enqueue<NdnEvent> enQNdnEvents;
 	protected final Enqueue<NdnTraffic> ndnTraffic;
 	protected final ExponentialBackoff retryPolicy;
-    public DataHoarder(Enqueue<NdnEvent> ndnEvents,
+    public DataHoarder(Enqueue<NdnEvent> enQNdnEvents,
                        Enqueue<NdnTraffic> ndnTraffic,
                        ExponentialBackoff retryPolicy) {
-        this.ndnEvents = ndnEvents;
+        this.enQNdnEvents = enQNdnEvents;
 	    this.ndnTraffic = ndnTraffic;
 	    this.retryPolicy = retryPolicy;
 	    retryPolicy.begin();
@@ -46,17 +48,10 @@ public abstract class DataHoarder implements OnData, OnTimeout, OnNetworkNack {
     	//TODO would be possible to make this delay more accurate, i.e. the delay should
 	    // exclude the amount of time it took the back to come back, and in some cases,
 	    // there may be little or no delay.
-    	ndnEvents.enQ(new ExpressDelayedInterest(() -> {
-		    if (retryPolicy.allowRetryNonBlocking()) {
-			    retry(interest);
-		    }
-		    else {
-			    maxedOutRetries(interest);
-		    }
-	    },
-		retryPolicy.getInterestLifetime(),
-		interest,
-		this));
+			long delay = retryPolicy.getInterestLifetime();
+			NdnEvent event = new ExpressSingleInterest(interest, this);
+			DelayedNdnEvent delayedNdnEvent = new DelayedNdnEvent(delay, event);
+			enQNdnEvents.enQ(delayedNdnEvent);
     }
 
 	@Override
@@ -82,17 +77,17 @@ public abstract class DataHoarder implements OnData, OnTimeout, OnNetworkNack {
 	public void expressInterest(Interest newInterest, DataHoarder hoarder) {
         try {
 	        newInterest.setInterestLifetimeMilliseconds(retryPolicy.getInterestLifetime());
-            ndnEvents.enQ(new SimpleExpressInterest(newInterest, hoarder));
+            enQNdnEvents.enQ(new SimpleExpressInterest(newInterest, hoarder));
         } catch (Exception e) {
             log.error("Failed to retry and express interest", e);
         }
     }
 
 	public com.uofantarctica.hoard.data_management.FlatDataHoarder newFlatDataHoarder() {
-		return new com.uofantarctica.hoard.data_management.FlatDataHoarder(ndnEvents, ndnTraffic, retryPolicy.duplicate());
+		return new com.uofantarctica.hoard.data_management.FlatDataHoarder(enQNdnEvents, ndnTraffic, retryPolicy.duplicate());
 	}
 
 	public com.uofantarctica.hoard.data_management.IncrementingDataHoarder newIncrementingDataHoarder(com.uofantarctica.hoard.data_management.SyncDataHoarder syncDataHoarder, Name prefix) {
-    	return new com.uofantarctica.hoard.data_management.IncrementingDataHoarder(ndnEvents, ndnTraffic, retryPolicy.duplicate(), syncDataHoarder, prefix);
+    	return new com.uofantarctica.hoard.data_management.IncrementingDataHoarder(enQNdnEvents, ndnTraffic, retryPolicy.duplicate(), syncDataHoarder, prefix);
 	}
 }

@@ -125,7 +125,7 @@ public class MemoryContentCache implements OnInterestCallback {
   {
     for (int i = 0; i < registeredPrefixIdList_.size(); ++i)
   //face_.removeRegisteredPrefix( );
-    ndnEvents.enQ(new RemoveRegisteredPrefix((long)registeredPrefixIdList_.get(i)));consume aarin nor
+    enQNdnEvents.enQ(new RemoveRegisteredPrefix((long)registeredPrefixIdList_.get(i)));consume aarin nor
     registeredPrefixIdList_.clear();
 
     // Also clear each onDataNotFoundForPrefix given to registerFlatDataPrefix.
