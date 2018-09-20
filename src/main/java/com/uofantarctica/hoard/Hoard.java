@@ -89,8 +89,6 @@ public class Hoard implements Runnable {
 			face = new LocalFace(enQNdnEvent);
 		}
 
-		face.initHoardFederation(theDataPrefix, theBroadcastPrefix, chatRoom, screenName);
-
 		cache = new MemoryContentCache(enQNdnEvent, enQNdnTraffic);
 		/* TODO in order to work out federation, caches are going to need to be
 		 * separate by namespace, or at least tracked separately.
@@ -110,7 +108,9 @@ public class Hoard implements Runnable {
 		 * the names of data in that dataset. Interested parties need only ask for
 		 * numbered data of the datasets they're interested to  learn what to ask for.
 		 */
-		NdnServer network = new NdnServer(face, deQNdnEvent, enQNdnTraffic);
+		NdnServer.FederationInfo federationInfo =
+			new NdnServer.FederationInfo(theDataPrefix, theBroadcastPrefix, chatRoom, screenName);
+		NdnServer network = new NdnServer(face, deQNdnEvent, enQNdnTraffic, federationInfo);
 		HoardServer hoardServer = new HoardServer(enQNdnEvent, enQNdnTraffic, cache, deQNdnTraffic);
 		hoardExecutor.execute(network);
 		hoardExecutor.execute(hoardServer);

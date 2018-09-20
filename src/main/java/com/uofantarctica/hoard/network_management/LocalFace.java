@@ -47,11 +47,7 @@ public class LocalFace {
 	private final Enqueue<NdnEvent> ndnEvents;
 	private KeyChain keyChain;
 	private Name certificateName;
-	private DSync dsync;
-	private String theDataPrefix;
-	private String theBroadcastPrefix;
-	private String chatRoom;;
-	private String screenName;
+	private FederationProtocol federationProtocol;
 
 	public LocalFace(FaceInit.FaceBundle faceBundle, Enqueue<NdnEvent> ndnEvents) {
 		this.ndnEvents = ndnEvents;
@@ -201,42 +197,10 @@ public class LocalFace {
 	}
 
 	public void publishFederatedEvent(HoardPrefixType.PrefixType prefixType) {
-		dsync.publishNextMessage(new Data().setContent(new Blob(prefixType.toByteArray())));
+		federationProtocol.publishNextMessage(new Data().setContent(new Blob(prefixType.toByteArray())));
 	}
 
-	public void startDsync(Enqueue<NdnTraffic> enQNdnTraffic) {
-		this.dsync = new DSync(
-				new OnData() {
-					@Override
-					public void onData(Interest interest, Data data) {
-						try {
-							HoardPrefixType.PrefixType prefixType = HoardPrefixType.PrefixType.parseFrom(data.getContent().getImmutableArray());
-							enQNdnTraffic.enQ(new InitPrefixTraffic(prefixType));
-						} catch (InvalidProtocolBufferException e) {
-							log.error("failed to decode hoardServer prefix type: {}", data.getName().toUri());
-						}
-					}
-				},
-				new ChronoSync2013.OnInitialized() {
-					@Override
-					public void onInitialized() {
-						log.debug("HoardServer prefix discovery dsync route initialized.");
-					}
-				},
-				theDataPrefix,
-				theBroadcastPrefix,
-				System.currentTimeMillis(),
-				getFace(),
-				getKeyChain(),
-				chatRoom,
-				screenName,
-				ReturnStrategy.EXACT);
-	}
-
-	public void initHoardFederation(String theDataPrefix, String theBroadcastPrefix, String chatRoom, String screenName) {
-		this.theDataPrefix = theDataPrefix;
-		this.theBroadcastPrefix = theBroadcastPrefix;
-		this.chatRoom = chatRoom;
-		this.screenName = screenName;
+	public void setFederationProtocol(FederationProtocol federationProtocol) {
+		this.federationProtocol = federationProtocol;
 	}
 }
