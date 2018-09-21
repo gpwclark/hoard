@@ -35,10 +35,7 @@ public class HoardTest {
 	int port;
 	int numMessages = 10;
 	int numParticipants = 2;
-	UserChatSummary summary = null;
-	ChatSimulation simulation;
-	Hoard hoard;
-	Thread hoardThread;
+	HoardSimulation simulation;
 
 	@ClassRule
 	public static DockerComposeRule docker = DockerComposeRule.builder()
@@ -54,50 +51,24 @@ public class HoardTest {
 				.port(INTERNAL_PORT);
 		host = nfd.getIp();
 		port = nfd.getExternalPort();
-		TransportConfiguration.setTransportFactory(new DockerTcpTransportFactory(host, port));
-
-		String screenName = "scratchy";
-		String hubPrefix = "ndn/broadcast/data-namespace";
-		String defaultChatRoom = "ndnchat";
-		String chatRoom = defaultChatRoom;
-		String broadcastBaseName = "/ndn/broadcast/sync-namespace";
-
-		hoard = Main.startDefaultHoard();
-		hoardThread = new Thread(hoard);
-		hoardThread.start();
-		HoardPrefixType.PrefixType.Builder prefixBuilder = HoardPrefixType.PrefixType.newBuilder();
-		String routeName = broadcastBaseName + "/" + defaultChatRoom;
-
-		prefixBuilder.setName(routeName)
-				.setType(HoardPrefixType.PrefixType.ActionType.DSYNC);
-		HoardPrefixType.PrefixType prefixType = prefixBuilder.build();
-
-		hoard.addRoute(prefixType);
-
-		ChatSimulationBuilder builder = ChatSimulationBuilder.aChatSimulation();
-		builder.withScreenName(screenName)
-				.withBroadcastBaseName(broadcastBaseName)
-				.withHubPrefix(hubPrefix)
-				.withChatRoom(chatRoom)
-				.withNumMessages(numMessages)
-				.withNumParticipants(numParticipants);
-		simulation = builder.build();
-		summary = simulation.simulate();
+		simulation
+			= new HoardSimulation(host, port, numMessages, numParticipants);
+		simulation.simulate();
 	}
 
 
 	@After
 	public void tearDown() throws Exception {
 		docker.containers().container(NFD_SERVICE).stop();
-		hoard.interrupt();
+		simulation.hoard.interrupt();
 	}
 
 	@Test
 	public void testCache() {
 		log.debug("Running testcache");
 		Set<Interest> uniqueInterests = new HashSet<>();
-		for (Interest interest : simulation.getAllInterests()) {
-			Optional<Data> data = hoard.testCache(interest);
+		for (Interest interest : simulation.chatSimulation.getAllInterests()) {
+			Optional<Data> data = simulation.hoard.testCache(interest);
 			assertTrue("Looking for interest: " + interest.toUri() + ", found no matching data.", data.isPresent());
 			log.debug("found data for interest: {}", interest.toUri());
 			uniqueInterests.add(interest);
