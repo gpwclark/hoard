@@ -1,7 +1,5 @@
 package com.uofantarctica.hoard.network_management;
 
-import com.uofantarctica.hoard.message_passing.DelayedNdnEvent;
-import com.uofantarctica.hoard.message_passing.Enqueue;
 import com.uofantarctica.hoard.message_passing.event.ExpressInterest;
 import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.hoard.message_passing.event.PutData;
@@ -72,7 +70,7 @@ public class LocalFace {
 				++attempts;
 				try {
 					log.debug("Retrying face evaluate");
-					FaceInit.FaceBundle faceBundle = FaceInit.getRawFace();
+					FaceInit.FaceBundle faceBundle = FaceInit.getFaceBundle();
 					newFace(faceBundle);
 					retryNdnEvents();
 					break;

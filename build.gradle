@@ -23,7 +23,8 @@ dependencies {
     implementation "com.uofantarctica:jndn.helpers:0.1"
     implementation "com.uofantarctica:jndn.proto:0.1"
     implementation "com.netflix.astyanax:astyanax:3.9.0"
-    testImplementation "com.palantir.docker.compose:docker-compose-rule-junit4:0.29.1"
+    //testImplementation "com.palantir.docker.compose:docker-compose-rule-junit4:0.29.1"
+    testImplementation "com.palantir.docker.compose:docker-compose-rule-junit4:0.34.0"
     testImplementation "junit:junit:4.12"
     testImplementation "com.uofantarctica:jndn.sync-test-framework:0.1"
 }

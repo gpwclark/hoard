@@ -1,7 +1,5 @@
 package com.uofantarctica.hoard.network_management;
 
-import com.uofantarctica.hoard.message_passing.Enqueue;
-import com.uofantarctica.hoard.message_passing.event.NdnEvent;
 import com.uofantarctica.jndn.helpers.FaceSecurity;
 import com.uofantarctica.jndn.helpers.TransportConfiguration;
 import net.named_data.jndn.Face;
@@ -47,7 +45,7 @@ public class FaceInit {
 		}
 	}
 
-	public static FaceBundle getRawFace() throws IOException {
+	public static FaceBundle getFaceBundle() throws IOException {
 		Face face = TransportConfiguration.getFace();
 		FaceSecurity.SecurityData securityData = initFaceAndGetSecurityData(face);
 		pumpFaceAwhile(face, 2000);
@@ -55,7 +53,7 @@ public class FaceInit {
 	}
 
 	public static LocalFace getFace() throws IOException {
-		FaceBundle faceBundle = getRawFace();
+		FaceBundle faceBundle = getFaceBundle();
 		//TODO sign packets? no? provenance?
 		return new LocalFace(faceBundle);
 	}

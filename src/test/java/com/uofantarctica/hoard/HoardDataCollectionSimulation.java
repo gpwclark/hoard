@@ -1,52 +1,54 @@
 package com.uofantarctica.hoard;
 
 import com.uofantarctica.hoard.protocols.HoardPrefixType;
-import com.uofantarctica.jndn.helpers.DockerTcpTransportFactory;
-import com.uofantarctica.jndn.helpers.TransportConfiguration;
 import com.uofantarctica.jndn.sync_test_framework.ChatSimulation;
 import com.uofantarctica.jndn.sync_test_framework.ChatSimulationBuilder;
 import com.uofantarctica.jndn.sync_test_framework.UserChatSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HoardSimulation {
-	private static final Logger log = LoggerFactory.getLogger(HoardSimulation.class);
+import java.util.UUID;
 
-	private final String host;
-	private final int port;
+public class HoardDataCollectionSimulation {
+	private static final Logger log = LoggerFactory.getLogger(HoardDataCollectionSimulation.class);
+
 	private final int numMessages;
 	private final int numParticipants;
 	UserChatSummary summary;
 	public Hoard hoard;
 	public ChatSimulation chatSimulation;
 	Thread hoardThread;
+	String screenName = "scratchy";
+	String hubPrefix = "ndn/broadcast/data-namespace";
+	String chatRoomPrefix = "ndnchat";
+	String broadcastBaseName = "/ndn/broadcast/sync-namespace";
 
-	public HoardSimulation(String host, int port, int numMessages, int numParticipants) {
-		this.host = host;
-		this.port = port;
+
+	public HoardDataCollectionSimulation(int numMessages, int numParticipants) {
 		this.numMessages = numMessages;
 		this.numParticipants = numParticipants;
 	}
 
 	public void simulate() {
-		TransportConfiguration.setTransportFactory(new DockerTcpTransportFactory(host, port));
+		startHoard();
+		newDataCollectionPhase();
+	}
 
-		String screenName = "scratchy";
-		String hubPrefix = "ndn/broadcast/data-namespace";
-		String defaultChatRoom = "ndnchat";
-		String chatRoom = defaultChatRoom;
-		String broadcastBaseName = "/ndn/broadcast/sync-namespace";
-
+	private void startHoard() {
 		hoard = Main.startDefaultHoard();
 		hoardThread = new Thread(hoard);
 		hoardThread.start();
+	}
+
+	public void newDataCollectionPhase() {
 		HoardPrefixType.PrefixType.Builder prefixBuilder = HoardPrefixType.PrefixType.newBuilder();
-		String routeName = broadcastBaseName + "/" + defaultChatRoom;
+
+		String chatRoom = chatRoomPrefix + UUID.randomUUID().toString();
+		String routeName = broadcastBaseName + "/" + chatRoom;
 
 		prefixBuilder.setName(routeName)
 			.setType(HoardPrefixType.PrefixType.ActionType.DSYNC);
 		HoardPrefixType.PrefixType prefixType = prefixBuilder.build();
-
 		hoard.addRoute(prefixType);
 
 		ChatSimulationBuilder builder = ChatSimulationBuilder.aChatSimulation();
