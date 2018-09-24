@@ -26,7 +26,7 @@ public class DelayObject<T> implements Delayed {
 			this.minStartTime - ((DelayObject) delayed).minStartTime);
 	}
 
-	public <T> T getData() {
-		return (T) t;
+	public T getData() {
+		return t;
 	}
 }
